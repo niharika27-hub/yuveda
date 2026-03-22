@@ -14,7 +14,7 @@ export const categories: Category[] = [
     name: "Churna",
     slug: "churna",
     description: "Traditional herbal powders for digestive wellness, immunity, and holistic healing. Finely ground from the purest herbs.",
-    icon: "Mortar",
+    icon: "Beaker",
     image: "https://images.unsplash.com/photo-1611241893603-3c359704e0ee?w=400&h=300&fit=crop",
     productCount: 4,
   },
