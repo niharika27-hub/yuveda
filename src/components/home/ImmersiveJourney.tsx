@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Lenis from "lenis";
 import { useEffect, useRef, useState } from "react";
-import { products } from "@/lib/products";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 const storyChapters = [
   {
@@ -98,6 +98,7 @@ const originBlocks = [
 ];
 
 export function ImmersiveJourney() {
+  const { products } = useRealtimeProducts();
   const pageRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
   const [isCompactMotion, setIsCompactMotion] = useState(false);

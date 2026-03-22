@@ -5,9 +5,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart, Lightbulb } from "lucide-react";
 import { getConcernBySlug } from "@/lib/concerns";
-import { getProductsByConcern, Product } from "@/lib/products";
+import { getProductsByConcernFromList, Product } from "@/lib/products-live";
 import { useCartStore } from "@/store/useCartStore";
 import { notFound } from "next/navigation";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -39,11 +40,12 @@ function ProductCard({ product }: { product: Product }) {
 
 export default function ConcernPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const { products, loading, error } = useRealtimeProducts();
   const concern = getConcernBySlug(slug);
 
   if (!concern) notFound();
 
-  const concernProducts = getProductsByConcern(slug);
+  const concernProducts = getProductsByConcernFromList(products, slug);
 
   return (
     <div className="pt-24 pb-16">
@@ -88,6 +90,8 @@ export default function ConcernPage({ params }: { params: Promise<{ slug: string
         {/* Products */}
         <div className="mt-12">
           <h2 className="font-serif text-3xl text-[#201B12] mb-8">Recommended Products</h2>
+          {loading && <p className="text-sm text-[#56615B] mb-3">Loading live products...</p>}
+          {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {concernProducts.map((product, i) => (
               <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>

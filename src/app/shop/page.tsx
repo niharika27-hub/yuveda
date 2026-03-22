@@ -4,11 +4,12 @@ import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingCart, Heart, SlidersHorizontal, X, ChevronDown } from "lucide-react";
-import { products, Product } from "@/lib/products";
+import { Product } from "@/lib/products-live";
 import { categories } from "@/lib/categories";
 import { concerns } from "@/lib/concerns";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -110,6 +111,7 @@ type FilterSidebarProps = {
   setSelectedConcerns: Dispatch<SetStateAction<string[]>>;
   priceRange: [number, number];
   setPriceRange: Dispatch<SetStateAction<[number, number]>>;
+  categoryCounts: Record<string, number>;
 };
 
 function FilterSidebar({
@@ -119,6 +121,7 @@ function FilterSidebar({
   setSelectedConcerns,
   priceRange,
   setPriceRange,
+  categoryCounts,
 }: FilterSidebarProps) {
   const toggleCategory = (slug: string) => {
     setSelectedCategories((prev) =>
@@ -168,7 +171,7 @@ function FilterSidebar({
                 {cat.name}
               </span>
               <span className="text-xs text-[#56615B] ml-auto">
-                ({cat.productCount})
+                ({categoryCounts[cat.slug] ?? 0})
               </span>
             </label>
           ))}
@@ -262,11 +265,19 @@ function FilterSidebar({
 }
 
 export default function ShopPage() {
+  const { products, loading, error } = useRealtimeProducts();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [sortBy, setSortBy] = useState("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const categoryCounts = useMemo(() => {
+    return products.reduce<Record<string, number>>((acc, product) => {
+      acc[product.categorySlug] = (acc[product.categorySlug] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -301,7 +312,7 @@ export default function ShopPage() {
     }
 
     return result;
-  }, [selectedCategories, selectedConcerns, priceRange, sortBy]);
+  }, [products, selectedCategories, selectedConcerns, priceRange, sortBy]);
 
   return (
     <div className="pt-24 pb-16">
@@ -319,6 +330,12 @@ export default function ShopPage() {
           <p className="text-[#56615B] mt-2">
             {filteredProducts.length} products available
           </p>
+          {loading && (
+            <p className="text-sm text-[#56615B] mt-1">Loading live products...</p>
+          )}
+          {error && (
+            <p className="text-sm text-red-600 mt-1">{error}</p>
+          )}
         </div>
 
         <div className="flex gap-8">
@@ -332,6 +349,7 @@ export default function ShopPage() {
                 setSelectedConcerns={setSelectedConcerns}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
+                categoryCounts={categoryCounts}
               />
             </div>
           </div>
@@ -424,6 +442,7 @@ export default function ShopPage() {
                 setSelectedConcerns={setSelectedConcerns}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
+                categoryCounts={categoryCounts}
               />
             </motion.div>
           </>

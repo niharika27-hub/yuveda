@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart } from "lucide-react";
-import { getFeaturedProducts, Product } from "@/lib/products";
+import { Product } from "@/lib/products-live";
 import { useCartStore } from "@/store/useCartStore";
 import { useRef } from "react";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -89,7 +90,8 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export function FeaturedProducts() {
-  const featured = getFeaturedProducts();
+  const { products } = useRealtimeProducts();
+  const featured = products.filter((product) => product.featured).slice(0, 8);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (

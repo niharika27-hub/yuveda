@@ -5,9 +5,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart } from "lucide-react";
 import { getCategoryBySlug } from "@/lib/categories";
-import { getProductsByCategory, Product } from "@/lib/products";
+import { getProductsByCategoryFromList, Product } from "@/lib/products-live";
 import { useCartStore } from "@/store/useCartStore";
 import { notFound } from "next/navigation";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -42,11 +43,12 @@ function ProductCard({ product }: { product: Product }) {
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const { products, loading, error } = useRealtimeProducts();
   const category = getCategoryBySlug(slug);
 
   if (!category) notFound();
 
-  const categoryProducts = getProductsByCategory(slug);
+  const categoryProducts = getProductsByCategoryFromList(products, slug);
 
   return (
     <div className="pt-24 pb-16">
@@ -73,6 +75,8 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <p className="text-[#56615B] mb-8">{categoryProducts.length} products</p>
+        {loading && <p className="text-sm text-[#56615B] mb-3">Loading live products...</p>}
+        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {categoryProducts.map((product, i) => (
             <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>

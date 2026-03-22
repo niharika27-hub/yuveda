@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Product } from "@/lib/products";
+import { Product } from "@/lib/products-live";
 
 interface WishlistState {
   items: Product[];

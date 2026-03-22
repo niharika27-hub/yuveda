@@ -1,14 +1,15 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart, Heart, Minus, Plus, ShieldCheck, Truck, Leaf, ChevronLeft, ChevronRight } from "lucide-react";
-import { getProductById, getRelatedProducts, Product } from "@/lib/products";
+import { getProductByIdFromList, getRelatedProductsFromList, Product } from "@/lib/products-live";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notFound } from "next/navigation";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 function RelatedCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -41,23 +42,35 @@ function RelatedCard({ product }: { product: Product }) {
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const product = getProductById(id);
+  const { products, loading, error } = useRealtimeProducts();
+  const product = useMemo(() => getProductByIdFromList(products, id), [products, id]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const addItem = useCartStore((s) => s.addItem);
   const { addItem: addWish, removeItem: removeWish, isInWishlist } = useWishlistStore();
 
-  if (!product) {
+  if (!loading && !product) {
     notFound();
   }
 
+  if (loading || !product) {
+    return (
+      <div className="pt-28 pb-16 px-4 text-center text-[#56615B]">
+        Loading live product details...
+      </div>
+    );
+  }
+
   const wishlisted = isInWishlist(product.id);
-  const related = getRelatedProducts(product);
+  const related = getRelatedProductsFromList(products, product);
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
   return (
     <div className="pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {error && (
+          <p className="mb-4 text-sm text-red-600">{error}</p>
+        )}
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-[#56615B] mb-8">
           <Link href="/" className="hover:text-[#1F5D3B]">Home</Link>

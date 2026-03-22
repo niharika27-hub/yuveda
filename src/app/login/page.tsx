@@ -1,13 +1,105 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Leaf } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hydrate = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        router.replace("/profile");
+      }
+    };
+
+    void hydrate();
+  }, [router]);
+
+  const handleAuthSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setLoading(true);
+
+    if (!email || !password) {
+      setErrorMessage("Email and password are required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!isLogin && !fullName.trim()) {
+      setErrorMessage("Please enter your full name for sign up.");
+      setLoading(false);
+      return;
+    }
+
+    if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        setLoading(false);
+        return;
+      }
+
+      router.push("/profile");
+      router.refresh();
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          phone,
+        },
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!data.session) {
+      setSuccessMessage(
+        "Account created. Please verify your email, then sign in."
+      );
+      setIsLogin(true);
+      setPassword("");
+      setLoading(false);
+      return;
+    }
+
+    router.push("/profile");
+    router.refresh();
+    setLoading(false);
+  };
 
   return (
     <div className="pt-24 pb-16 min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FFF8F3] to-[#FEF2E3]">
@@ -26,27 +118,50 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-ambient p-8">
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
+          <form onSubmit={handleAuthSubmit} className="space-y-5">
             {!isLogin && (
               <div>
                 <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Full Name</label>
-                <input placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <input
+                  placeholder="Enter your name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all"
+                />
               </div>
             )}
             <div>
               <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Email</label>
-              <input type="email" placeholder="your@email.com" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all"
+              />
             </div>
             {!isLogin && (
               <div>
                 <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Phone</label>
-                <input type="tel" placeholder="+91 98765 43210" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <input
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all"
+                />
               </div>
             )}
             <div>
               <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Password</label>
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} placeholder="Enter password" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all pr-12" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all pr-12"
+                />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#56615B] hover:text-[#201B12]">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -58,11 +173,21 @@ export default function LoginPage() {
                   <input type="checkbox" className="rounded border-[#c0c9bf]" />
                   <span className="text-[#56615B]">Remember me</span>
                 </label>
-                <button className="text-[#C9A961] hover:text-[#1F5D3B] transition-colors">Forgot password?</button>
+                <button type="button" className="text-[#C9A961] hover:text-[#1F5D3B] transition-colors">Forgot password?</button>
               </div>
             )}
+            {errorMessage && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">
+                {errorMessage}
+              </p>
+            )}
+            {successMessage && (
+              <p className="text-sm text-[#1F5D3B] bg-[#E8F3EC] rounded-xl px-3 py-2">
+                {successMessage}
+              </p>
+            )}
             <button type="submit" className="w-full py-3.5 rounded-full btn-gradient text-white font-medium hover:shadow-lg hover:shadow-[#1F5D3B]/30 transition-all">
-              {isLogin ? "Sign In" : "Create Account"}
+              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </button>
           </form>
 

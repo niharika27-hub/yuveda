@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { searchProducts } from "@/lib/products";
+import { searchProductsInList } from "@/lib/products-live";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -45,9 +46,13 @@ export function Navbar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const cartCount = useCartStore((s) => s.getItemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
+  const { products } = useRealtimeProducts();
   const searchResults = useMemo(
-    () => (searchQuery.length >= 2 ? searchProducts(searchQuery).slice(0, 5) : []),
-    [searchQuery]
+    () =>
+      searchQuery.length >= 2
+        ? searchProductsInList(products, searchQuery).slice(0, 5)
+        : [],
+    [products, searchQuery]
   );
 
   useEffect(() => {
