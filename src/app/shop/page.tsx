@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingCart, Heart, SlidersHorizontal, X, ChevronDown } from "lucide-react";
@@ -42,7 +42,11 @@ function ProductCard({ product }: { product: Product }) {
           <button
             onClick={(e) => {
               e.preventDefault();
-              wishlisted ? removeWish(product.id) : addWish(product);
+              if (wishlisted) {
+                removeWish(product.id);
+              } else {
+                addWish(product);
+              }
             }}
             className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
           >
@@ -99,6 +103,164 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
+type FilterSidebarProps = {
+  selectedCategories: string[];
+  setSelectedCategories: Dispatch<SetStateAction<string[]>>;
+  selectedConcerns: string[];
+  setSelectedConcerns: Dispatch<SetStateAction<string[]>>;
+  priceRange: [number, number];
+  setPriceRange: Dispatch<SetStateAction<[number, number]>>;
+};
+
+function FilterSidebar({
+  selectedCategories,
+  setSelectedCategories,
+  selectedConcerns,
+  setSelectedConcerns,
+  priceRange,
+  setPriceRange,
+}: FilterSidebarProps) {
+  const toggleCategory = (slug: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(slug) ? prev.filter((c) => c !== slug) : [...prev, slug]
+    );
+  };
+
+  const toggleConcern = (slug: string) => {
+    setSelectedConcerns((prev) =>
+      prev.includes(slug) ? prev.filter((c) => c !== slug) : [...prev, slug]
+    );
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Categories */}
+      <div className="glass-grid-panel rounded-2xl p-4">
+        <h3 className="font-serif text-lg text-[#201B12] mb-3">Categories</h3>
+        <div className="space-y-2">
+          {categories.map((cat) => (
+            <label
+              key={cat.slug}
+              className="flex items-center gap-2.5 cursor-pointer group"
+              onClick={() => toggleCategory(cat.slug)}
+            >
+              <div
+                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                  selectedCategories.includes(cat.slug)
+                    ? "bg-[#1F5D3B] border-[#1F5D3B]"
+                    : "border-[#c0c9bf] group-hover:border-[#1F5D3B]"
+                }`}
+              >
+                {selectedCategories.includes(cat.slug) && (
+                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12">
+                    <path
+                      d="M10 3L4.5 8.5L2 6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+              <span className="text-sm text-[#201B12] group-hover:text-[#1F5D3B] transition-colors">
+                {cat.name}
+              </span>
+              <span className="text-xs text-[#56615B] ml-auto">
+                ({cat.productCount})
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Concerns */}
+      <div className="glass-grid-panel rounded-2xl p-4">
+        <h3 className="font-serif text-lg text-[#201B12] mb-3">
+          Health Concern
+        </h3>
+        <div className="space-y-2">
+          {concerns.map((con) => (
+            <label
+              key={con.slug}
+              className="flex items-center gap-2.5 cursor-pointer group"
+              onClick={() => toggleConcern(con.slug)}
+            >
+              <div
+                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                  selectedConcerns.includes(con.slug)
+                    ? "bg-[#1F5D3B] border-[#1F5D3B]"
+                    : "border-[#c0c9bf] group-hover:border-[#1F5D3B]"
+                }`}
+              >
+                {selectedConcerns.includes(con.slug) && (
+                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12">
+                    <path
+                      d="M10 3L4.5 8.5L2 6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+              <span className="text-sm text-[#201B12] group-hover:text-[#1F5D3B] transition-colors">
+                {con.name}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Price */}
+      <div className="glass-grid-panel rounded-2xl p-4">
+        <h3 className="font-serif text-lg text-[#201B12] mb-3">Price Range</h3>
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            value={priceRange[0]}
+            onChange={(e) =>
+              setPriceRange([Number(e.target.value), priceRange[1]])
+            }
+            className="glass-input w-20 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#1F5D3B]/20"
+            placeholder="Min"
+          />
+          <span className="text-[#56615B]">—</span>
+          <input
+            type="number"
+            value={priceRange[1]}
+            onChange={(e) =>
+              setPriceRange([priceRange[0], Number(e.target.value)])
+            }
+            className="glass-input w-20 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#1F5D3B]/20"
+            placeholder="Max"
+          />
+        </div>
+      </div>
+
+      {/* Clear */}
+      {(selectedCategories.length > 0 ||
+        selectedConcerns.length > 0 ||
+        priceRange[0] > 0 ||
+        priceRange[1] < 1000) && (
+        <button
+          onClick={() => {
+            setSelectedCategories([]);
+            setSelectedConcerns([]);
+            setPriceRange([0, 1000]);
+          }}
+          className="text-sm text-[#C9A961] hover:text-[#1F5D3B] transition-colors"
+        >
+          Clear All Filters
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
@@ -141,144 +303,6 @@ export default function ShopPage() {
     return result;
   }, [selectedCategories, selectedConcerns, priceRange, sortBy]);
 
-  const toggleCategory = (slug: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(slug) ? prev.filter((c) => c !== slug) : [...prev, slug]
-    );
-  };
-
-  const toggleConcern = (slug: string) => {
-    setSelectedConcerns((prev) =>
-      prev.includes(slug) ? prev.filter((c) => c !== slug) : [...prev, slug]
-    );
-  };
-
-  const FilterSidebar = () => (
-    <div className="space-y-8">
-      {/* Categories */}
-      <div>
-        <h3 className="font-serif text-lg text-[#201B12] mb-3">Categories</h3>
-        <div className="space-y-2">
-          {categories.map((cat) => (
-            <label
-              key={cat.slug}
-              className="flex items-center gap-2.5 cursor-pointer group"
-            >
-              <div
-                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
-                  selectedCategories.includes(cat.slug)
-                    ? "bg-[#1F5D3B] border-[#1F5D3B]"
-                    : "border-[#c0c9bf] group-hover:border-[#1F5D3B]"
-                }`}
-              >
-                {selectedCategories.includes(cat.slug) && (
-                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12">
-                    <path
-                      d="M10 3L4.5 8.5L2 6"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </div>
-              <span className="text-sm text-[#201B12] group-hover:text-[#1F5D3B] transition-colors">
-                {cat.name}
-              </span>
-              <span className="text-xs text-[#56615B] ml-auto">
-                ({cat.productCount})
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Concerns */}
-      <div>
-        <h3 className="font-serif text-lg text-[#201B12] mb-3">
-          Health Concern
-        </h3>
-        <div className="space-y-2">
-          {concerns.map((con) => (
-            <label
-              key={con.slug}
-              className="flex items-center gap-2.5 cursor-pointer group"
-            >
-              <div
-                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
-                  selectedConcerns.includes(con.slug)
-                    ? "bg-[#1F5D3B] border-[#1F5D3B]"
-                    : "border-[#c0c9bf] group-hover:border-[#1F5D3B]"
-                }`}
-              >
-                {selectedConcerns.includes(con.slug) && (
-                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12">
-                    <path
-                      d="M10 3L4.5 8.5L2 6"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </div>
-              <span className="text-sm text-[#201B12] group-hover:text-[#1F5D3B] transition-colors">
-                {con.name}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Price */}
-      <div>
-        <h3 className="font-serif text-lg text-[#201B12] mb-3">Price Range</h3>
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            value={priceRange[0]}
-            onChange={(e) =>
-              setPriceRange([Number(e.target.value), priceRange[1]])
-            }
-            className="w-20 px-3 py-2 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:ring-1 focus:ring-[#1F5D3B]/20"
-            placeholder="Min"
-          />
-          <span className="text-[#56615B]">—</span>
-          <input
-            type="number"
-            value={priceRange[1]}
-            onChange={(e) =>
-              setPriceRange([priceRange[0], Number(e.target.value)])
-            }
-            className="w-20 px-3 py-2 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:ring-1 focus:ring-[#1F5D3B]/20"
-            placeholder="Max"
-          />
-        </div>
-      </div>
-
-      {/* Clear */}
-      {(selectedCategories.length > 0 ||
-        selectedConcerns.length > 0 ||
-        priceRange[0] > 0 ||
-        priceRange[1] < 1000) && (
-        <button
-          onClick={() => {
-            setSelectedCategories([]);
-            setSelectedConcerns([]);
-            setPriceRange([0, 1000]);
-          }}
-          className="text-sm text-[#C9A961] hover:text-[#1F5D3B] transition-colors"
-        >
-          Clear All Filters
-        </button>
-      )}
-    </div>
-  );
-
   return (
     <div className="pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -301,7 +325,14 @@ export default function ShopPage() {
           {/* Desktop Sidebar */}
           <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-28">
-              <FilterSidebar />
+              <FilterSidebar
+                selectedCategories={selectedCategories}
+                setSelectedCategories={setSelectedCategories}
+                selectedConcerns={selectedConcerns}
+                setSelectedConcerns={setSelectedConcerns}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+              />
             </div>
           </div>
 
@@ -311,7 +342,7 @@ export default function ShopPage() {
             <div className="flex items-center justify-between mb-6 gap-4">
               <button
                 onClick={() => setFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white shadow-ambient-sm text-sm font-medium"
+                className="glass-grid-panel lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
               >
                 <SlidersHorizontal className="w-4 h-4" /> Filters
               </button>
@@ -321,7 +352,7 @@ export default function ShopPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none px-4 py-2.5 pr-8 rounded-xl bg-white shadow-ambient-sm text-sm font-medium focus:outline-none cursor-pointer"
+                    className="glass-grid-panel appearance-none px-4 py-2.5 pr-8 rounded-xl text-sm font-medium focus:outline-none cursor-pointer"
                   >
                     <option value="featured">Featured</option>
                     <option value="price-low">Price: Low to High</option>
@@ -378,7 +409,7 @@ export default function ShopPage() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 bottom-0 w-80 bg-[#FFF8F3] z-50 p-6 overflow-y-auto lg:hidden"
+              className="glass-grid-panel fixed left-0 top-0 bottom-0 w-80 z-50 p-6 overflow-y-auto lg:hidden rounded-r-3xl"
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className="font-serif text-xl">Filters</h2>
@@ -386,7 +417,14 @@ export default function ShopPage() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <FilterSidebar />
+              <FilterSidebar
+                selectedCategories={selectedCategories}
+                setSelectedCategories={setSelectedCategories}
+                selectedConcerns={selectedConcerns}
+                setSelectedConcerns={setSelectedConcerns}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+              />
             </motion.div>
           </>
         )}

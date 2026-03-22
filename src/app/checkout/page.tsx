@@ -10,6 +10,7 @@ export default function CheckoutPage() {
   const { items, getTotal, clearCart } = useCartStore();
   const [step, setStep] = useState<"form" | "success">("form");
   const [paymentMethod, setPaymentMethod] = useState("upi");
+  const [orderId, setOrderId] = useState<string>("");
 
   if (step === "success") {
     return (
@@ -20,7 +21,7 @@ export default function CheckoutPage() {
           </div>
           <h1 className="font-serif text-3xl text-[#201B12] mb-3">Order Placed!</h1>
           <p className="text-[#56615B] mb-2">Thank you for your order. Your Ayurvedic wellness products are on the way!</p>
-          <p className="text-sm text-[#C9A961] font-medium mb-8">Order ID: #YUV-{Date.now().toString().slice(-6)}</p>
+          <p className="text-sm text-[#C9A961] font-medium mb-8">Order ID: #YUV-{orderId}</p>
           <Link href="/shop" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full btn-gradient text-white font-medium">
             Continue Shopping
           </Link>
@@ -104,7 +105,11 @@ export default function CheckoutPage() {
               <div className="border-t border-[#EDE1D2] mt-4 pt-4">
                 <div className="flex justify-between text-lg font-bold"><span>Total</span><span className="text-[#1F5D3B]">₹{Math.round(getTotal() * 1.18)}</span></div>
               </div>
-              <button onClick={() => { setStep("success"); clearCart(); }} className="block w-full mt-6 py-4 rounded-full btn-gradient text-white text-center font-medium hover:shadow-lg hover:shadow-[#1F5D3B]/30 transition-all">
+              <button onClick={() => {
+                setOrderId(Math.floor(100000 + Math.random() * 900000).toString());
+                setStep("success");
+                clearCart();
+              }} className="block w-full mt-6 py-4 rounded-full btn-gradient text-white text-center font-medium hover:shadow-lg hover:shadow-[#1F5D3B]/30 transition-all">
                 Place Order — ₹{Math.round(getTotal() * 1.18)}
               </button>
             </div>

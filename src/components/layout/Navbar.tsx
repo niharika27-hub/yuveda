@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { searchProducts, Product } from "@/lib/products";
+import { searchProducts } from "@/lib/products";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -41,25 +41,20 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const cartCount = useCartStore((s) => s.getItemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
+  const searchResults = useMemo(
+    () => (searchQuery.length >= 2 ? searchProducts(searchQuery).slice(0, 5) : []),
+    [searchQuery]
+  );
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    if (searchQuery.length >= 2) {
-      setSearchResults(searchProducts(searchQuery).slice(0, 5));
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchQuery]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

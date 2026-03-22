@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { GlobalBackground } from "@/components/layout/GlobalBackground";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,10 +42,13 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#FFF8F3] text-[#201B12]">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <body className="relative min-h-full overflow-x-clip bg-[#0d150f] text-[#201B12]">
+        <GlobalBackground />
+        <div className="relative z-10 flex min-h-full flex-col">
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );

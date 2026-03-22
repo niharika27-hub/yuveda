@@ -41,7 +41,7 @@ export default function CategoriesIndexPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 bg-white">
+                  <div className="glass-grid-panel rounded-b-2xl p-4">
                     <p className="text-xs text-[#56615B] line-clamp-2">{cat.description}</p>
                   </div>
                 </Link>
