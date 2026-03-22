@@ -10,9 +10,10 @@ import {
   Heart,
   Zap,
   Dumbbell,
+  type LucideIcon,
 } from "lucide-react";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<string, LucideIcon> = {
   Shield,
   Flame,
   Activity,
