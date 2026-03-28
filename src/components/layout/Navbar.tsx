@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -42,6 +43,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [logoSrc, setLogoSrc] = useState("/journey/yuveda-logo.png");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const cartCount = useCartStore((s) => s.getItemCount());
@@ -84,13 +86,16 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#004526] to-[#1F5D3B] flex items-center justify-center">
-                <span className="text-white font-serif text-lg font-bold">Y</span>
-              </div>
-              <span className="font-serif text-2xl font-bold text-[#004526] tracking-tight group-hover:text-[#1F5D3B] transition-colors">
-                Yuveda
-              </span>
+            <Link href="/" className="group inline-flex items-center">
+              <Image
+                src={logoSrc}
+                alt="Yuveda"
+                width={420}
+                height={154}
+                priority
+                onError={() => setLogoSrc("/yuveda-logo.svg")}
+                className="h-12 w-auto sm:h-16 md:h-20 lg:h-24 xl:h-28 object-contain transition-opacity group-hover:opacity-90"
+              />
             </Link>
 
             {/* Desktop Nav */}

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { products as fallbackCatalog } from "@/lib/products";
 
 export interface Product {
   id: string;
@@ -28,6 +29,7 @@ type CategoryRow = {
   Category: string | null;
   Quantity: string | null;
   Price: string | null;
+  images: string[] | null;
 };
 
 type ConcernRow = {
@@ -35,24 +37,10 @@ type ConcernRow = {
   Concern: string | null;
   Quantity: string | null;
   Price: number | null;
+  images: string[] | null;
 };
 
-const imageByCategorySlug: Record<string, string> = {
-  churna:
-    "https://images.unsplash.com/photo-1611241893603-3c359704e0ee?w=600&h=600&fit=crop",
-  pak: "https://images.unsplash.com/photo-1574226516831-e1dff420e562?w=600&h=600&fit=crop",
-  capsules:
-    "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&h=600&fit=crop",
-  oils: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=600&fit=crop",
-  powders:
-    "https://images.unsplash.com/photo-1622467827417-bbe2237067a9?w=600&h=600&fit=crop",
-  juices:
-    "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600&h=600&fit=crop",
-  syrups:
-    "https://images.unsplash.com/photo-1471943311424-646960669fbc?w=600&h=600&fit=crop",
-  general:
-    "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&h=600&fit=crop",
-};
+const blankProductImage = "/blank-product.svg";
 
 function slugify(value: string): string {
   return value
@@ -116,6 +104,73 @@ function parsePrice(value: unknown): number {
   return 0;
 }
 
+function parseImages(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+
+  return [];
+}
+
+function isNetworkLikeError(message: string): boolean {
+  return /failed to fetch|fetch failed|networkerror|load failed/i.test(message);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+type QueryResult<T> = {
+  data: T[];
+  errorMessage: string | null;
+};
+
+async function queryWithRetry<T>(
+  runQuery: () => Promise<{ data: T[] | null; error: { message: string } | null }>,
+  attempts: number = 3
+): Promise<QueryResult<T>> {
+  let lastErrorMessage: string | null = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    let data: T[] | null = null;
+    let error: { message: string } | null = null;
+
+    try {
+      const result = await runQuery();
+      data = result.data;
+      error = result.error;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      error = { message };
+    }
+
+    if (!error) {
+      return { data: data ?? [], errorMessage: null };
+    }
+
+    lastErrorMessage = error.message;
+    const shouldRetry = isNetworkLikeError(error.message) && attempt < attempts;
+
+    if (!shouldRetry) {
+      break;
+    }
+
+    await sleep(250 * attempt);
+  }
+
+  return { data: [], errorMessage: lastErrorMessage };
+}
+
 function hashCode(text: string): number {
   let hash = 0;
   for (let i = 0; i < text.length; i += 1) {
@@ -152,7 +207,8 @@ function buildProduct(
   categorySlug: string,
   quantity: string,
   price: number,
-  concerns: string[]
+  concerns: string[],
+  customImages?: string[]
 ): Product {
   const id = slugify(name);
   const stable = hashCode(name);
@@ -160,7 +216,9 @@ function buildProduct(
   const reviews = 40 + (stable % 460);
   const featured = stable % 4 === 0;
   const originalPrice = Math.max(price, Math.round(price * 1.2));
-  const image = imageByCategorySlug[categorySlug] ?? imageByCategorySlug.general;
+  const fallbackImage = blankProductImage;
+  const images = customImages && customImages.length > 0 ? customImages : [fallbackImage];
+  const image = images[0] ?? fallbackImage;
 
   return {
     id,
@@ -178,7 +236,7 @@ function buildProduct(
     benefits: makeBenefits(concerns, category),
     usage: "Use as directed on label or as advised by your Ayurvedic practitioner.",
     image,
-    images: [image],
+    images,
     concerns,
     inStock: true,
     featured,
@@ -187,35 +245,40 @@ function buildProduct(
 }
 
 export async function fetchProductsFromSupabase(): Promise<Product[]> {
-  const [{ data: categoryRows, error: categoryError }, { data: concernRows, error: concernError }] =
-    await Promise.all([
-      supabase
+  const [categoryResult, concernResult] = await Promise.all([
+    queryWithRetry(async () =>
+      await supabase
         .from("products_by_category")
-        .select('"Product Name",Category,Quantity,Price'),
-      supabase
+        .select('"Product Name",Category,Quantity,Price,images')
+    ),
+    queryWithRetry(async () =>
+      await supabase
         .from("products_by_concern")
-        .select('"Product Name",Concern,Quantity,Price'),
-    ]);
+        .select('"Product Name",Concern,Quantity,Price,images')
+    ),
+  ]);
 
-  if (categoryError) {
-    throw new Error(`Failed to load category products: ${categoryError.message}`);
+  const categoryData = categoryResult.data as CategoryRow[];
+  const concernData = concernResult.data as ConcernRow[];
+
+  if (categoryResult.errorMessage && concernResult.errorMessage) {
+    console.error(
+      "Supabase product fetch failed for both tables. Falling back to local catalog.",
+      {
+        categoryError: categoryResult.errorMessage,
+        concernError: concernResult.errorMessage,
+      }
+    );
+    return [...fallbackCatalog];
   }
-
-  if (concernError) {
-    throw new Error(`Failed to load concern products: ${concernError.message}`);
-  }
-
-  const categoryData = (categoryRows ?? []) as CategoryRow[];
-  const concernData = (concernRows ?? []) as ConcernRow[];
 
   if (categoryData.length === 0 && concernData.length === 0) {
-    throw new Error(
-      "No product rows were returned. If products exist in Supabase, add public SELECT policies for products_by_category and products_by_concern."
-    );
+    return [...fallbackCatalog];
   }
 
   const concernsByName = new Map<string, Set<string>>();
   const priceByName = new Map<string, number>();
+  const imagesByName = new Map<string, string[]>();
 
   for (const row of concernData) {
     const name = (row["Product Name"] ?? "").trim();
@@ -235,6 +298,11 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     if (parsed > 0) {
       priceByName.set(key, parsed);
     }
+
+    const parsedImages = parseImages(row.images);
+    if (parsedImages.length > 0) {
+      imagesByName.set(key, parsedImages);
+    }
   }
 
   const productsByName = new Map<string, Product>();
@@ -249,10 +317,12 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     const quantity = (row.Quantity ?? "").trim();
     const price = parsePrice(row.Price) || priceByName.get(key) || 0;
     const concerns = Array.from(concernsByName.get(key) ?? []);
+    const images = parseImages(row.images);
+    const mergedImages = images.length > 0 ? images : imagesByName.get(key) ?? [];
 
     productsByName.set(
       key,
-      buildProduct(name, category, categorySlug, quantity, price, concerns)
+      buildProduct(name, category, categorySlug, quantity, price, concerns, mergedImages)
     );
   }
 
@@ -266,10 +336,11 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     const concerns = Array.from(concernsByName.get(key) ?? []);
     const price = parsePrice(row.Price) || 0;
     const quantity = (row.Quantity ?? "").trim();
+    const images = parseImages(row.images);
 
     productsByName.set(
       key,
-      buildProduct(name, "General Wellness", "general", quantity, price, concerns)
+      buildProduct(name, "General Wellness", "general", quantity, price, concerns, images)
     );
   }
 

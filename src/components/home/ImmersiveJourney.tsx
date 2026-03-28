@@ -59,6 +59,15 @@ const quotes = [
 
 const ingredients = ["Neem", "Tulsi", "Amla", "Brahmi", "Ashwagandha", "Shatavari"];
 
+const mobileIngredientPositions = [
+  { left: 12, top: 16 },
+  { left: 88, top: 16 },
+  { left: 96, top: 50 },
+  { left: 78, top: 84 },
+  { left: 22, top: 84 },
+  { left: 4, top: 50 },
+];
+
 const ritualSteps = [
   {
     title: "Daily Alignment",
@@ -102,6 +111,7 @@ export function ImmersiveJourney() {
   const pageRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
   const [isCompactMotion, setIsCompactMotion] = useState(false);
+  const [isMobileHero, setIsMobileHero] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 900px), (pointer: coarse)");
@@ -114,6 +124,20 @@ export function ImmersiveJourney() {
 
     return () => {
       mediaQuery.removeEventListener("change", updateMotionMode);
+    };
+  }, []);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 640px)");
+    const updateMobileMode = (event?: MediaQueryListEvent) => {
+      setIsMobileHero(event ? event.matches : mobileQuery.matches);
+    };
+
+    updateMobileMode();
+    mobileQuery.addEventListener("change", updateMobileMode);
+
+    return () => {
+      mobileQuery.removeEventListener("change", updateMobileMode);
     };
   }, []);
 
@@ -236,7 +260,7 @@ export function ImmersiveJourney() {
               </motion.p>
             </motion.div>
 
-            <div className="relative mx-auto flex h-[520px] w-full max-w-[520px] items-center justify-center">
+            <div className="relative mx-auto flex h-[430px] w-full max-w-[350px] items-center justify-center sm:h-[520px] sm:max-w-[520px]">
               {ingredients.map((item, index) => (
                 <motion.div
                   key={item}
@@ -244,10 +268,14 @@ export function ImmersiveJourney() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, amount: 0.5 }}
                   transition={{ duration: revealDuration * 1.1, delay: staggerStep * index }}
-                  className="ingredient-orb"
+                  className={`ingredient-orb ${isMobileHero ? "ingredient-orb-mobile" : ""}`}
                   style={{
-                    left: `${50 + Math.cos((index / ingredients.length) * Math.PI * 2) * 35}%`,
-                    top: `${50 + Math.sin((index / ingredients.length) * Math.PI * 2) * 35}%`,
+                    left: isMobileHero
+                      ? `${mobileIngredientPositions[index]?.left ?? 50}%`
+                      : `${50 + Math.cos((index / ingredients.length) * Math.PI * 2) * 35}%`,
+                    top: isMobileHero
+                      ? `${mobileIngredientPositions[index]?.top ?? 50}%`
+                      : `${50 + Math.sin((index / ingredients.length) * Math.PI * 2) * 35}%`,
                     animationDelay: `${index * 0.55}s`,
                   }}
                 >
@@ -260,13 +288,13 @@ export function ImmersiveJourney() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: revealDuration * 1.2, delay: staggerStep * 1.8 }}
-                className="relative z-10 flex h-56 w-56 items-center justify-center rounded-full border border-[#1f6f43]/25 bg-white/75 text-center backdrop-blur-lg"
+                className="relative z-10 flex h-44 w-44 items-center justify-center rounded-full border border-[#1f6f43]/25 bg-white/75 text-center backdrop-blur-lg sm:h-56 sm:w-56"
               >
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#557163]">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-[#557163] sm:text-xs sm:tracking-[0.24em]">
                     Botanical Harmony
                   </p>
-                  <p className="mt-3 text-2xl font-semibold text-[#174029]">
+                  <p className="mt-2 text-2xl font-semibold text-[#174029] sm:mt-3 sm:text-3xl">
                     Yuveda
                   </p>
                 </div>

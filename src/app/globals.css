@@ -199,6 +199,13 @@
   animation: bloomFloat 5.5s ease-in-out infinite;
 }
 
+.ingredient-orb-mobile {
+  padding: 0.34rem 0.56rem;
+  font-size: 0.5rem;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
 .lotus-card::before {
   content: "";
   position: absolute;
