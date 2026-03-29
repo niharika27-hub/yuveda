@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yuveda | Wellness that blooms with every scroll</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --color-green: #2D4A3E;
+      --color-cream: #F7F0E6;
+      --color-gold: #C9A84C;
+      --color-text: #1A2E25;
+      --font-heading: 'Playfair Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius-lg: 12px;
+      --max-width: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      overflow-x: hidden;
+      scroll-behavior: auto;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--color-text);
+      background: linear-gradient(180deg, #f9f4ec 0%, #f4ecdf 100%);
+      line-height: 1.5;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .container {
+      width: min(var(--max-width), 92vw);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .section-kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #4f6b5d;
+      font-size: 0.8rem;
+      margin-bottom: 0.9rem;
+      font-weight: 700;
+    }
+
+    .site-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 50;
+      background: rgba(18, 41, 32, 0.74);
+      backdrop-filter: blur(7px);
+      border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+    }
+
+    .nav-inner {
+      width: min(var(--max-width), 92vw);
+      margin: 0 auto;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--color-cream);
+    }
+
+    .brand {
+      font-family: var(--font-heading);
+      letter-spacing: 0.04em;
+      font-size: 1.6rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.35rem;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a {
+      color: var(--color-cream);
+      text-decoration: none;
+      opacity: 0.92;
+    }
+
+    .hero {
+      min-height: 100vh;
+      position: relative;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--color-cream);
+      overflow: hidden;
+      isolation: isolate;
+      padding-top: 72px;
+    }
+
+    .hero-bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(45, 74, 62, 0.4);
+      z-index: -1;
+    }
+
+    .hero h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 6.5vw, 5rem);
+      line-height: 1.06;
+      max-width: 11ch;
+      margin-inline: auto;
+      text-wrap: balance;
+    }
+
+    .hero p {
+      margin: 1.2rem auto 0;
+      max-width: 56ch;
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      opacity: 0.95;
+    }
+
+    .botanical {
+      position: relative;
+      background: var(--color-cream);
+      padding: 5rem 0;
+      border-top-left-radius: 44px;
+      border-top-right-radius: 44px;
+      margin-top: -30px;
+      z-index: 2;
+    }
+
+    .ticker-wrap {
+      overflow: hidden;
+      border-block: 1px solid rgba(45, 74, 62, 0.18);
+      padding: 0.85rem 0;
+      margin: 1.1rem 0 2rem;
+      white-space: nowrap;
+      color: #4a6557;
+      font-weight: 600;
+    }
+
+    .ticker {
+      display: inline-block;
+      min-width: 100%;
+      padding-left: 100%;
+      animation: ticker 20s linear infinite;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      font-size: 0.88rem;
+    }
+
+    @keyframes ticker {
+      to {
+        transform: translateX(-100%);
+      }
+    }
+
+    .ingredient-grid {
+      margin-top: 1.6rem;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 280px));
+      gap: 1.25rem;
+      justify-content: center;
+    }
+
+    .ingredient-card {
+      background: #f4ead9;
+      border-radius: var(--radius-lg);
+      padding: 0.65rem;
+      border: 1px solid transparent;
+      transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+
+    .ingredient-card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+    }
+
+    .ingredient-card h3 {
+      margin-top: 0.85rem;
+      letter-spacing: 0.06em;
+      font-size: 1rem;
+      text-align: center;
+      color: var(--color-green);
+    }
+
+    .ingredient-card:hover {
+      transform: scale(1.04);
+      border-color: rgba(201, 168, 76, 0.95);
+      box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.7), 0 10px 28px rgba(201, 168, 76, 0.28);
+    }
+
+    .highlights {
+      padding: 6rem 0;
+      background: radial-gradient(circle at 15% 15%, #f6eddf 0%, #efe3d0 58%, #eadcc7 100%);
+    }
+
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .highlights-image {
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 22px 42px rgba(0, 0, 0, 0.16);
+      border: 1px solid rgba(45, 74, 62, 0.18);
+    }
+
+    .highlights-image img {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+    }
+
+    .product-cards {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.1rem;
+    }
+
+    .product-card {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(45, 74, 62, 0.14);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      backdrop-filter: blur(2px);
+    }
+
+    .product-card strong {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      color: var(--color-green);
+    }
+
+    .forest-divider {
+      width: 100%;
+      height: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .forest-divider img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(1px);
+    }
+
+    .chapters {
+      position: relative;
+      min-height: 115vh;
+      overflow: hidden;
+      color: var(--color-cream);
+    }
+
+    .chapters-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 115%;
+      object-fit: cover;
+      z-index: -2;
+      will-change: transform;
+    }
+
+    .chapters-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(45, 74, 62, 0) 20%, var(--color-green) 88%);
+      z-index: -1;
+    }
+
+    .chapters-content {
+      width: min(var(--max-width), 92vw);
+      margin: 0 auto;
+      padding: 6rem 0 5rem;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .chapters-panel {
+      background: rgba(16, 34, 27, 0.57);
+      border: 1px solid rgba(201, 168, 76, 0.32);
+      border-radius: 18px;
+      padding: 1.35rem 1.35rem 1.5rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .chapters-panel p {
+      max-width: 55ch;
+      opacity: 0.94;
+      margin-bottom: 1rem;
+    }
+
+    .chapter-list {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .chapter-item {
+      border-left: 2px solid rgba(201, 168, 76, 0.5);
+      padding-left: 0.9rem;
+      font-size: 0.96rem;
+    }
+
+    .chapter-item strong {
+      font-family: var(--font-heading);
+      color: var(--color-gold);
+      font-size: 1.08rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .chapter-one {
+      align-self: end;
+      justify-self: center;
+      width: min(360px, 100%);
+    }
+
+    .banyan-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(201, 168, 76, 0.35);
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.28);
+    }
+
+    .banyan-card img {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      object-fit: cover;
+    }
+
+    .chapter-caption {
+      margin-top: 0.75rem;
+      text-align: center;
+      font-family: var(--font-heading);
+      font-style: italic;
+      color: var(--color-gold);
+      font-size: 1.04rem;
+    }
+
+    .testimonials {
+      position: relative;
+      padding: 5.4rem 0;
+      background: var(--color-cream);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .texture-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.12;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .testimonial-grid {
+      margin-top: 1.2rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .quote-card {
+      background: rgba(247, 240, 230, 0.88);
+      border: 1px solid rgba(45, 74, 62, 0.2);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+
+    .quote-card p {
+      font-family: var(--font-heading);
+      font-size: 1.12rem;
+      line-height: 1.3;
+      margin-bottom: 0.7rem;
+      color: #2a4035;
+    }
+
+    .quote-card span {
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      color: #4a6458;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .stats {
+      background: #e9dfcf;
+      padding: 4rem 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.9rem;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.56);
+      border: 1px solid rgba(45, 74, 62, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: clamp(1.65rem, 3vw, 2.3rem);
+      color: var(--color-green);
+      margin-bottom: 0.2rem;
+    }
+
+    .ritual {
+      padding: 5rem 0;
+      background: linear-gradient(180deg, #f6eee1 0%, #f8f3ea 100%);
+    }
+
+    .ritual-steps {
+      margin-top: 1.2rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .ritual-step {
+      border: 1px solid rgba(45, 74, 62, 0.2);
+      background: #fff9f0;
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .ritual-step h4 {
+      font-family: var(--font-heading);
+      color: var(--color-green);
+      margin-bottom: 0.35rem;
+    }
+
+    .footer-cta {
+      background: var(--color-green);
+      color: var(--color-cream);
+      text-align: center;
+      padding: 4rem 1rem 3.6rem;
+    }
+
+    .footer-cta h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 3.1rem);
+      margin-bottom: 0.8rem;
+    }
+
+    .footer-cta p {
+      max-width: 60ch;
+      margin: 0 auto 1.2rem;
+      opacity: 0.95;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      padding: 0.8rem 1.3rem;
+      text-decoration: none;
+      border-radius: 999px;
+      border: 1px solid var(--color-gold);
+      color: var(--color-cream);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    .cta-btn:hover {
+      background: var(--color-gold);
+      color: #1f3128;
+    }
+
+    @media (max-width: 980px) {
+      .nav-links {
+        display: none;
+      }
+
+      .highlights-grid,
+      .chapters-content {
+        grid-template-columns: 1fr;
+      }
+
+      .highlights-image img {
+        min-height: 320px;
+      }
+
+      .chapter-one {
+        width: min(420px, 100%);
+      }
+
+      .testimonial-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .ritual-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .ingredient-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .botanical,
+      .highlights,
+      .testimonials,
+      .ritual {
+        padding-top: 4.2rem;
+        padding-bottom: 4.2rem;
+      }
+
+      .stats {
+        padding: 3rem 0;
+      }
+
+      .forest-divider {
+        height: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 1. Navigation -->
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <div class="brand">YUVEDA</div>
+      <div class="nav-links">
+        <a href="#botanical">Ingredients</a>
+        <a href="#highlights">Collection</a>
+        <a href="#chapters">Chapters</a>
+        <a href="#testimonials">Testimonials</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- 2. Hero (hero-forest.jpg) -->
+    <section class="hero" id="hero">
+      <img class="hero-bg" src="/images/hero-forest.jpg" alt="Dense Yuveda forest canopy" />
+      <div class="hero-overlay"></div>
+      <div class="container">
+        <h1>Wellness that blooms with every scroll.</h1>
+        <p>Ancient botanical intelligence, hand-crafted as daily rituals for modern rhythm and calm.</p>
+      </div>
+    </section>
+
+    <!-- 3. Botanical Ingredient Ticker (neem + tulsi cards) -->
+    <section class="botanical" id="botanical">
+      <div class="container">
+        <div class="section-kicker">Botanical Ingredient Ticker</div>
+        <h2 class="section-title">Plants with Purpose</h2>
+
+        <div class="ticker-wrap" aria-label="Botanical ingredient ticker">
+          <div class="ticker">NEEM | TULSI | ASHWAGANDHA | BRAHMI | AMLA | TURMERIC | SHATAVARI | MULETHI |</div>
+        </div>
+
+        <div class="ingredient-grid">
+          <article class="ingredient-card neem-card">
+            <img src="/images/neem-leaf.jpg" alt="Neem leaf ingredient spotlight" />
+            <h3>NEEM</h3>
+          </article>
+          <article class="ingredient-card tulsi-card">
+            <img src="/images/tulsi-plant.jpg" alt="Tulsi plant ingredient spotlight" />
+            <h3>TULSI</h3>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Product Highlights (herb-flatlay.jpg on left) -->
+    <section class="highlights" id="highlights">
+      <div class="container highlights-grid">
+        <figure class="highlights-image">
+          <img src="/images/herb-flatlay.jpg" alt="Blooming Lotus Collection herb flatlay" />
+        </figure>
+        <div>
+          <div class="section-kicker">Blooming Lotus Collection</div>
+          <h2 class="section-title">Product Highlights</h2>
+          <p>Curated formulations designed to balance skin, digestion, and daily energy through layered herbal synergy.</p>
+          <div class="product-cards">
+            <article class="product-card">
+              <strong>Lotus Radiance Elixir</strong>
+              <p>Brightens and comforts with saffron, manjistha, and rose hydrosol.</p>
+            </article>
+            <article class="product-card">
+              <strong>Forest Calm Night Oil</strong>
+              <p>Deep overnight nourishment with neem, tulsi, and kumkumadi infusion.</p>
+            </article>
+            <article class="product-card">
+              <strong>Verdant Reset Tonic</strong>
+              <p>A grounding ritual for digestion and glow, inspired by Vedic kitchen medicine.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Forest Floor Divider (forest-floor.jpg) -->
+    <div class="forest-divider" aria-hidden="true">
+      <img src="/images/forest-floor.jpg" alt="" />
+    </div>
+
+    <!-- 6. Brand Story / Chapters (misty-path.jpg + banyan-tree.jpg) -->
+    <section class="chapters" id="chapters">
+      <img class="chapters-bg" src="/images/misty-path.jpg" alt="Misty forest path background" />
+      <div class="chapters-overlay"></div>
+
+      <div class="chapters-content">
+        <article class="chapters-panel">
+          <div class="section-kicker">Brand Story</div>
+          <h2 class="section-title">Chapters of Care</h2>
+          <p>Yuveda unfolds as a guided narrative of craft: from regenerative sourcing to mindful extraction and transparent ritual design.</p>
+          <div class="chapter-list">
+            <div class="chapter-item">
+              <strong>Chapter 1: Sustainability First</strong>
+              <p>Regenerative micro-farming partnerships keep every ingredient traceable and seasonally aligned.</p>
+            </div>
+            <div class="chapter-item">
+              <strong>Chapter 2: Slow Maceration</strong>
+              <p>We use low-heat infusion windows to preserve volatile botanical compounds and aromatic complexity.</p>
+            </div>
+            <div class="chapter-item">
+              <strong>Chapter 3: Ritual Precision</strong>
+              <p>Each blend is designed as a simple sequence that fits naturally into modern routines.</p>
+            </div>
+          </div>
+        </article>
+
+        <aside class="chapter-one">
+          <div class="banyan-card">
+            <img src="/images/banyan-tree.jpg" alt="Banyan tree representing sustainability first" />
+          </div>
+          <p class="chapter-caption">Rooted in centuries of botanical wisdom.</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 7. Testimonials (leaf-texture.jpg subtle background) -->
+    <section class="testimonials" id="testimonials">
+      <img class="texture-layer" src="/images/leaf-texture.jpg" alt="" aria-hidden="true" />
+      <div class="container">
+        <div class="section-kicker">Illuminated Customer Scrolls</div>
+        <h2 class="section-title">Testimonials</h2>
+        <div class="testimonial-grid">
+          <article class="quote-card">
+            <p>My skin settled in two weeks. It feels like my nightly ritual now has intention.</p>
+            <span>Riya A.</span>
+          </article>
+          <article class="quote-card">
+            <p>The aroma alone shifts my mood. Calm, clear, and deeply grounding.</p>
+            <span>Neel M.</span>
+          </article>
+          <article class="quote-card">
+            <p>I came for glow, stayed for balance. Everything feels thoughtfully crafted.</p>
+            <span>Aparna K.</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Stats Section -->
+    <section class="stats" id="stats">
+      <div class="container">
+        <div class="stats-grid">
+          <article class="stat-box">
+            <strong>96%</strong>
+            <p>Customers report visible texture improvement in 30 days.</p>
+          </article>
+          <article class="stat-box">
+            <strong>42</strong>
+            <p>Partner farms using regenerative cultivation practices.</p>
+          </article>
+          <article class="stat-box">
+            <strong>0%</strong>
+            <p>Synthetic fragrance, parabens, sulfates, or mineral oils.</p>
+          </article>
+          <article class="stat-box">
+            <strong>4.9/5</strong>
+            <p>Average ritual satisfaction across flagship formulations.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Ritual Journey -->
+    <section class="ritual" id="ritual">
+      <div class="container">
+        <div class="section-kicker">Ritual Journey</div>
+        <h2 class="section-title">From Forest to Self-Care Flow</h2>
+        <div class="ritual-steps">
+          <article class="ritual-step">
+            <h4>Step 1: Cleanse</h4>
+            <p>Begin with warm water and a gentle botanical wash to prepare skin and breath.</p>
+          </article>
+          <article class="ritual-step">
+            <h4>Step 2: Infuse</h4>
+            <p>Apply concentrated elixirs with upward strokes, allowing the act to slow your pace.</p>
+          </article>
+          <article class="ritual-step">
+            <h4>Step 3: Seal</h4>
+            <p>Finish with nourishing oils and a quiet minute of stillness before sleep.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Footer CTA -->
+    <footer class="footer-cta" id="footer-cta">
+      <h2>Begin Your Yuveda Chapter</h2>
+      <p>Bring intentional Ayurveda into your everyday with rituals that are sensorial, effective, and deeply grounding.</p>
+      <a href="#hero" class="cta-btn">Explore the Collection</a>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/bundled/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    const lenis = new Lenis({
+      duration: 1.05,
+      smoothWheel: true,
+      smoothTouch: false,
+      wheelMultiplier: 0.95
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    lenis.on('scroll', ScrollTrigger.update);
+    requestAnimationFrame(raf);
+
+    gsap.from('.ingredient-card', {
+      opacity: 0,
+      y: 44,
+      duration: 0.8,
+      ease: 'power2.out',
+      stagger: 0.2,
+      scrollTrigger: {
+        trigger: '.ingredient-grid',
+        start: 'top 82%'
+      }
+    });
+
+    gsap.from('.highlights-image', {
+      opacity: 0,
+      x: -90,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '#highlights',
+        start: 'top 74%'
+      }
+    });
+
+    gsap.to('.chapters-bg', {
+      y: -80,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#chapters',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+
+    gsap.from('.chapter-one', {
+      opacity: 0,
+      y: 55,
+      scale: 0.95,
+      duration: 1,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: '.chapter-one',
+        start: 'top 83%'
+      }
+    });
+
+    ScrollTrigger.matchMedia({
+      '(min-width: 960px)': function () {
+        ScrollTrigger.create({
+          trigger: '#chapters',
+          start: 'top top+=80',
+          end: '+=440',
+          pin: '.chapters-panel',
+          pinSpacing: true,
+          anticipatePin: 1
+        });
+      }
+    });
+  </script>
+</body>
+</html>
