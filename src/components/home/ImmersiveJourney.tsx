@@ -371,16 +371,16 @@ export function ImmersiveJourney() {
         </div>
 
         <div className="js-hero-content relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1b2f24]/85">
+          <div className="js-glass-tilt glass-hover-media hero-glass-card max-w-3xl rounded-[30px] border border-white/65 bg-white/16 p-5 shadow-[0_12px_30px_rgba(20,43,31,0.14)] backdrop-blur-[2px] backdrop-saturate-150 transition-all duration-500 ease-out hover:border-white/85 hover:bg-white/22 sm:p-7 lg:p-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.26em] text-[#123122]">
               Ancient Wisdom. Modern Wellness.
             </p>
-            <h1 className="mt-5 text-5xl font-semibold leading-[1.04] tracking-tight text-[#1A2E25] sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 text-[clamp(3rem,8vw,5.55rem)] font-semibold leading-[0.98] tracking-tight text-[#132d21]">
               Wellness that blooms
               <br />
               with every scroll.
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#264336]/90 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-[clamp(1.05rem,2.2vw,1.3rem)] leading-relaxed text-[#18372a]">
               Yuveda blends herbal intelligence and mindful design into a calm,
               cinematic experience grounded in Ayurveda.
             </p>
@@ -904,6 +904,28 @@ export function ImmersiveJourney() {
         .glass-hover-media.is-hovering {
           transform: perspective(960px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-2px);
           box-shadow: 0 22px 44px rgba(18, 40, 28, 0.22);
+        }
+
+        .hero-glass-card {
+          overflow: hidden;
+        }
+
+        .hero-glass-card::before,
+        .hero-glass-card::after {
+          border-radius: inherit;
+        }
+
+        .hero-glass-card.is-hovering {
+          transform: translateY(-2px);
+          box-shadow: 0 24px 58px rgba(18, 40, 28, 0.22);
+        }
+
+        .hero-glass-card.is-hovering::before {
+          opacity: 0.78;
+        }
+
+        .hero-glass-card.is-hovering::after {
+          opacity: 0.95;
         }
 
         .ingredient-media {
