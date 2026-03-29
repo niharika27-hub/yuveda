@@ -68,6 +68,13 @@ const mobileIngredientPositions = [
   { left: 4, top: 50 },
 ];
 
+const stringArcs = [
+  { width: "78%", rotate: "-14deg", delay: "0s" },
+  { width: "92%", rotate: "-6deg", delay: "0.35s" },
+  { width: "102%", rotate: "2deg", delay: "0.7s" },
+  { width: "88%", rotate: "10deg", delay: "1.05s" },
+];
+
 const ritualSteps = [
   {
     title: "Daily Alignment",
@@ -168,6 +175,31 @@ export function ImmersiveJourney() {
     };
   }, [isCompactMotion, prefersReducedMotion]);
 
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    let disposed = false;
+    let destroyTune: (() => void) | null = null;
+
+    void import("@fiddle-digital/string-tune").then(({ StringParallax, StringTune }) => {
+      if (disposed) {
+        return;
+      }
+
+      const stringTune = StringTune.getInstance();
+      stringTune.use(StringParallax);
+      stringTune.start(isCompactMotion ? 50 : 60);
+      destroyTune = () => stringTune.destroy();
+    });
+
+    return () => {
+      disposed = true;
+      destroyTune?.();
+    };
+  }, [isCompactMotion, prefersReducedMotion]);
+
   const motionScale = prefersReducedMotion ? 0.28 : isCompactMotion ? 0.68 : 1;
   const revealDuration = prefersReducedMotion ? 0.3 : isCompactMotion ? 0.58 : 0.8;
   const staggerStep = prefersReducedMotion ? 0.04 : isCompactMotion ? 0.08 : 0.14;
@@ -198,7 +230,7 @@ export function ImmersiveJourney() {
   return (
     <div
       ref={pageRef}
-      className="relative overflow-x-clip"
+      className="string-tune-home relative overflow-x-clip"
     >
       <motion.div
         style={{ scaleX: smoothProgress }}
@@ -207,7 +239,7 @@ export function ImmersiveJourney() {
 
       <div className="relative z-10">
 
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="string-hero relative min-h-screen overflow-hidden">
         <motion.div
           style={{ y: heroParallaxY }}
           className="absolute inset-0 pointer-events-none"
@@ -215,6 +247,23 @@ export function ImmersiveJourney() {
           <div className="absolute left-[-8%] top-[-8%] h-[44vw] w-[44vw] rounded-full bg-[#2f8b4f]/15 blur-3xl" />
           <div className="absolute right-[-15%] top-[15%] h-[34vw] w-[34vw] rounded-full bg-[#f4a13d]/20 blur-3xl" />
           <div className="absolute bottom-[-18%] left-[28%] h-[40vw] w-[40vw] rounded-full bg-[#78a43d]/16 blur-3xl" />
+
+          <div className="string-fiddle-stage absolute inset-0" string="parallax" string-factor="0.07">
+            <div className="string-fiddle-core" string="parallax" string-factor="0.12" />
+            <div className="string-fiddle-hole string-fiddle-hole-left" />
+            <div className="string-fiddle-hole string-fiddle-hole-right" />
+            {stringArcs.map((arc, index) => (
+              <span
+                key={index}
+                className="string-fiddle-line"
+                string="parallax"
+                string-factor="0.2"
+                style={{ width: arc.width, ["--string-rotate" as string]: arc.rotate, animationDelay: arc.delay }}
+              />
+            ))}
+            <div className="string-fiddle-bow" string="parallax" string-factor="0.35" />
+            <div className="string-fiddle-bow-tip" />
+          </div>
         </motion.div>
 
         <motion.div
@@ -225,12 +274,23 @@ export function ImmersiveJourney() {
         <div className="relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
           <div className="grid w-full items-center gap-14 lg:grid-cols-2">
             <motion.div style={{ y: heroTextY }} className="space-y-7">
+              <motion.p
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: revealDuration, delay: staggerStep * 0.35 }}
+                className="string-kicker inline-flex items-center gap-2"
+              >
+                <span className="string-kicker-dot" />
+                Core wellness motion, ritual-first.
+              </motion.p>
+
               <motion.h1
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: revealDuration, delay: staggerStep * 0.75 }}
-                className="text-5xl font-semibold leading-[1.04] tracking-tight text-[#173822] sm:text-6xl lg:text-7xl"
+                className="string-hero-title text-5xl font-semibold leading-[1.04] tracking-tight text-[#173822] sm:text-6xl lg:text-7xl"
               >
                 Wellness that <span className="text-[#e07f11]">blooms</span>
                 <br />
@@ -257,6 +317,16 @@ export function ImmersiveJourney() {
                 className="text-sm uppercase tracking-[0.28em] text-[#4f6958]"
               >
                 Ancient Wisdom. Modern Wellness.
+              </motion.p>
+
+              <motion.p
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: revealDuration, delay: staggerStep * 2.4 }}
+                className="max-w-xl text-xs uppercase tracking-[0.22em] text-[#355d44]/85 sm:text-sm"
+              >
+                In tune with nature, crafted like string art.
               </motion.p>
             </motion.div>
 
@@ -304,7 +374,7 @@ export function ImmersiveJourney() {
         </div>
       </section>
 
-      <section className="relative min-h-screen px-4 py-24 sm:px-6 lg:px-8">
+      <section className="string-modules relative min-h-screen px-4 py-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -332,7 +402,7 @@ export function ImmersiveJourney() {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.35 }}
                 transition={{ duration: revealDuration, delay: index * staggerStep }}
-                className="lotus-card group relative overflow-hidden rounded-[2rem] border border-[#1f6f43]/15 bg-[#fffdfa]/85 p-4 shadow-[0_20px_60px_rgba(27,55,35,0.14)] backdrop-blur"
+                className="lotus-card string-module-card group relative overflow-hidden rounded-[2rem] border border-[#1f6f43]/15 bg-[#fffdfa]/85 p-4 shadow-[0_20px_60px_rgba(27,55,35,0.14)] backdrop-blur"
               >
                 <div className="relative h-56 w-full overflow-hidden rounded-[1.4rem]">
                   <Image
@@ -396,7 +466,7 @@ export function ImmersiveJourney() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.5 }}
                   transition={{ duration: revealDuration, delay: index * (staggerStep * 0.9) }}
-                  className="story-chapter rounded-[2rem] border border-[#1f6f43]/15 bg-white/75 p-8 backdrop-blur-sm"
+                  className="story-chapter string-chapter-card rounded-[2rem] border border-[#1f6f43]/15 bg-white/75 p-8 backdrop-blur-sm"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f6e6] text-[#1f6f43]">
@@ -459,7 +529,7 @@ export function ImmersiveJourney() {
                 whileInView={{ opacity: 1, y: 0, rotate: index === 1 ? 0 : index === 0 ? -1 : 1 }}
                 viewport={{ once: true, amount: 0.45 }}
                 transition={{ duration: revealDuration * 0.95, delay: index * (staggerStep * 0.9) }}
-                className="ink-scroll relative rounded-[2rem] border border-[#1f6f43]/15 bg-[#fff8e8]/92 p-7 shadow-[0_18px_50px_rgba(61,43,19,0.16)]"
+                className="ink-scroll string-quote-card relative rounded-[2rem] border border-[#1f6f43]/15 bg-[#fff8e8]/92 p-7 shadow-[0_18px_50px_rgba(61,43,19,0.16)]"
               >
                 <div className="mb-5 flex items-center gap-1 text-[#e08b1d]">
                   {[0, 1, 2, 3, 4].map((star) => (
@@ -479,7 +549,7 @@ export function ImmersiveJourney() {
       </section>
 
       <section className="relative min-h-[80vh] px-4 pb-28 pt-20 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-4xl flex-col items-center rounded-[2.6rem] border border-[#1f6f43]/20 bg-gradient-to-br from-[#f8fff3]/90 via-[#f4fbe9]/80 to-[#fff2de]/88 p-10 text-center shadow-[0_24px_80px_rgba(22,57,34,0.16)] backdrop-blur-sm sm:p-14">
+        <div className="string-cta-shell mx-auto flex max-w-4xl flex-col items-center rounded-[2.6rem] border border-[#1f6f43]/20 bg-gradient-to-br from-[#f8fff3]/90 via-[#f4fbe9]/80 to-[#fff2de]/88 p-10 text-center shadow-[0_24px_80px_rgba(22,57,34,0.16)] backdrop-blur-sm sm:p-14">
           <motion.div
             initial={{ y: -60, opacity: 0, rotate: -15 }}
             whileInView={{ y: 0, opacity: 1, rotate: 0 }}
