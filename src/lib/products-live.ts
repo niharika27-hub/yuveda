@@ -542,9 +542,16 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     );
   }
 
-  return Array.from(productsByName.values()).sort((a, b) =>
+  const mergedProducts = Array.from(productsByName.values()).sort((a, b) =>
     a.name.localeCompare(b.name)
   );
+
+  // If live rows are malformed (for example, missing product names), avoid rendering an empty catalog.
+  if (mergedProducts.length === 0) {
+    return [...fallbackCatalog];
+  }
+
+  return mergedProducts;
 }
 
 export function getProductsByCategoryFromList(

@@ -92,6 +92,7 @@ function ProductCard({ product }: { product: Product }) {
 export function FeaturedProducts() {
   const { products } = useRealtimeProducts();
   const featured = products.filter((product) => product.featured).slice(0, 8);
+  const showcaseProducts = featured.length > 0 ? featured : products.slice(0, 8);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -124,7 +125,7 @@ export function FeaturedProducts() {
           ref={scrollRef}
           className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
         >
-          {featured.map((product, i) => (
+          {showcaseProducts.map((product, i) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, x: 30 }}

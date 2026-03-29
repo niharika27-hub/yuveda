@@ -6,6 +6,7 @@ import {
   Product,
   subscribeProductsRealtime,
 } from "@/lib/products-live";
+import { products as fallbackCatalog } from "@/lib/products";
 
 export function useRealtimeProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,11 +17,18 @@ export function useRealtimeProducts() {
     try {
       setError(null);
       const liveProducts = await fetchProductsFromSupabase();
+
+      if (liveProducts.length === 0) {
+        setProducts(fallbackCatalog as Product[]);
+        setError("Live catalog unavailable. Showing curated catalog.");
+        return;
+      }
+
       setProducts(liveProducts);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to load products";
-      setError(message);
-      setProducts([]);
+      setError(`${message}. Showing curated catalog.`);
+      setProducts(fallbackCatalog as Product[]);
     } finally {
       setLoading(false);
     }
