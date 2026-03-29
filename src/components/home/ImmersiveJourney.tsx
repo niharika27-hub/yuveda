@@ -195,44 +195,11 @@ export function ImmersiveJourney() {
       rafId = window.requestAnimationFrame(updateLenis);
 
       context = gsap.context(() => {
-        gsap.set(".js-hero-bg", {
-          scale: 1.04,
-          transformOrigin: "center center",
-        });
-
-        gsap.set(".js-hero-mid", {
-          yPercent: 0,
-          transformOrigin: "center center",
-        });
-
         gsap.from(".js-hero-content", {
           opacity: 0,
           y: 26,
           duration: 1.1,
           ease: "power3.out",
-        });
-
-        gsap.to(".js-hero-bg", {
-          yPercent: 14,
-          scale: 1.14,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".js-hero-section",
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-
-        gsap.to(".js-hero-mid", {
-          yPercent: 8,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".js-hero-section",
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
         });
 
         gsap.set(".js-scroll-progress", {
@@ -390,32 +357,30 @@ export function ImmersiveJourney() {
       </div>
 
       <section className="js-hero-section relative min-h-screen overflow-hidden">
-        <div className="js-hero-bg absolute inset-0 will-change-transform">
+        <div className="absolute inset-0">
           <Image
-            src="/images/hero-forest.jpg"
+            src="/journey/seed-to-herb.webp"
             alt=""
             fill
             priority
             quality={92}
             sizes="100vw"
-            className="object-cover [filter:brightness(0.74)_contrast(1.16)_saturate(1.08)_blur(1.2px)]"
+            className="object-cover"
             aria-hidden
           />
         </div>
-        <div className="js-hero-mid absolute inset-0 will-change-transform bg-[radial-gradient(circle_at_22%_18%,rgba(255,214,160,0.18),rgba(255,214,160,0)_42%),radial-gradient(circle_at_78%_28%,rgba(255,255,255,0.08),rgba(255,255,255,0)_40%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(6,16,11,0.22),rgba(6,16,11,0.62))]" />
 
         <div className="js-hero-content relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#F7F0E6]/85">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1b2f24]/85">
               Ancient Wisdom. Modern Wellness.
             </p>
-            <h1 className="mt-5 text-5xl font-semibold leading-[1.04] tracking-tight text-[#F7F0E6] sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 text-5xl font-semibold leading-[1.04] tracking-tight text-[#1A2E25] sm:text-6xl lg:text-7xl">
               Wellness that blooms
               <br />
               with every scroll.
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#F7F0E6]/90 sm:text-lg">
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#264336]/90 sm:text-lg">
               Yuveda blends herbal intelligence and mindful design into a calm,
               cinematic experience grounded in Ayurveda.
             </p>

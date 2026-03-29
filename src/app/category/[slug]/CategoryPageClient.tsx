@@ -52,10 +52,9 @@ export function CategoryPageClient({ slug }: { slug: string }) {
     <div className="pt-24 pb-16">
       {/* Banner */}
       <div className="relative h-64 sm:h-80 overflow-hidden">
-        <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#004526]/85 to-[#1F5D3B]/50" />
+        <img src="/journey/seed-to-herb.webp" alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
             <div className="flex items-center gap-2 text-sm text-white/60 mb-3">
               <Link href="/" className="hover:text-white">Home</Link>
               <span>/</span>

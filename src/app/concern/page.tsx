@@ -27,14 +27,15 @@ export default function ConcernsIndexPage() {
               <motion.div key={concern.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Link href={`/concern/${concern.slug}`} className="group block overflow-hidden rounded-2xl shadow-ambient-sm hover:shadow-ambient transition-all duration-500 hover:-translate-y-1">
                   <div className="relative h-48 overflow-hidden">
-                    <img src={concern.image} alt={concern.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#004526]/80 to-transparent" />
+                    <img src="/journey/seed-to-herb.webp" alt="" className="w-full h-full object-cover" />
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-black/35 flex items-center justify-center">
                           <Icon className="w-5 h-5 text-white" />
                         </div>
-                        <h2 className="font-serif text-xl text-white">{concern.name}</h2>
+                        <h2 className="font-serif text-xl text-white" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
+                          {concern.name}
+                        </h2>
                       </div>
                     </div>
                   </div>

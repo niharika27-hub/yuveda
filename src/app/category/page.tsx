@@ -27,16 +27,19 @@ export default function CategoriesIndexPage() {
               <motion.div key={cat.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                 <Link href={`/category/${cat.slug}`} className="group block overflow-hidden rounded-2xl shadow-ambient-sm hover:shadow-ambient transition-all duration-500 hover:-translate-y-1">
                   <div className="relative h-44 overflow-hidden">
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#004526]/70 to-transparent" />
+                    <img src="/journey/seed-to-herb.webp" alt="" className="w-full h-full object-cover" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-black/35 flex items-center justify-center">
                           <Icon className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <h2 className="font-serif text-lg text-white font-medium">{cat.name}</h2>
-                          <p className="text-white/60 text-xs">{cat.productCount} Products</p>
+                          <h2 className="font-serif text-lg text-white font-medium" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
+                            {cat.name}
+                          </h2>
+                          <p className="text-white/80 text-xs" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
+                            {cat.productCount} Products
+                          </p>
                         </div>
                       </div>
                     </div>
