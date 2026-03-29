@@ -750,7 +750,7 @@ export function ImmersiveJourney() {
           }
 
           .ingredient-marquee {
-            overflow-x: auto;
+            overflow: hidden;
             scrollbar-width: none;
           }
 
@@ -758,7 +758,10 @@ export function ImmersiveJourney() {
             display: none;
           }
 
-          .ingredient-lane,
+          .ingredient-lane {
+            animation-duration: 72s;
+          }
+
           .ingredient-card {
             animation: none;
             transform: none;
