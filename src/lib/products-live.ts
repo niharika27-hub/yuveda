@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { hasSupabasePublicEnv, supabase } from "@/lib/supabase/client";
 import { products as fallbackCatalog } from "@/lib/products";
 
 export interface Product {
@@ -41,6 +41,201 @@ type ConcernRow = {
 };
 
 const blankProductImage = "/blank-product.svg";
+
+const productImageByName: Record<string, string> = {
+  "active energy": "/productimages/active_energy.jpeg",
+  "active energy syrup": "/productimages/active_energy.jpeg",
+  "aloe vera juice": "/productimages/Aloevera_sawaras.jpeg",
+  "amba haldi powder": "/productimages/Haridra_khand.jpeg",
+  "amla": "/productimages/amla_powder.jpeg",
+  "amla capsule": "/productimages/Amla_kashaye%27.jpeg",
+  "amla churna": "/productimages/amla_powder.jpeg",
+  "amla juice": "/productimages/amla_powder.jpeg",
+  "amla powder": "/productimages/amla_powder.jpeg",
+  "amla reetha shikakai": "/productimages/amla_reetha.jpeg",
+  "amla reetha shikakai powder": "/productimages/amla_reetha.jpeg",
+  "arjuna capsule": "/productimages/Arjuna_kashaye.jpeg",
+  "arjuna juice": "/productimages/Arjuna_kashaye.jpeg",
+  "arjuna kashaya": "/productimages/Arjuna_kashaye.jpeg",
+  "arjuna powder": "/productimages/ArjunChal_powder.jpeg",
+  "arjun chaal": "/productimages/ArjunChal_powder.jpeg",
+  "arthofit oil": "/productimages/Arthofit_SN_oil.jpeg",
+  "ashwagandha": "/productimages/Ashwagandha_kashaye.jpeg",
+  "ashwagandha capsule": "/productimages/Ashwagandha_kashaye.jpeg",
+  "ashwagandha pak": "/productimages/Ashwagandha_pak.jpeg",
+  "ashwagandha powder": "/productimages/Ashwagandha_kashaye.jpeg",
+  "ayurpure": "/productimages/Ayurpure_syrup.jpeg",
+  "badam oil": "/productimages/hair_oil.jpeg",
+  "badam pak": "/productimages/Badam_pak.jpeg",
+  "badam rogan oil": "/productimages/hair_oil.jpeg",
+  "balya rattan syrup": "/productimages/active_energy.jpeg",
+  "bed wet go": "/productimages/Bed_wet_go.jpeg",
+  "bhringraj oil": "/productimages/mahabhringraj_oil.jpeg",
+  "bhringraj powder": "/productimages/Bhringraj_powder.jpeg",
+  "brahmi amla": "/productimages/BrahmiAmrita_syrup.jpeg",
+  "castor oil": "/productimages/Castor_oil.jpeg",
+  "chandan prabhavati": "/productimages/Arshar7_capsule.jpeg",
+  "chawarka": "/productimages/Bed_wet_go.jpeg",
+  "chawarka kids": "/productimages/Bed_wet_go.jpeg",
+  "cheer oil": "/productimages/hair_oil.jpeg",
+  "derma care": "/productimages/Derma_care_powder.jpeg",
+  "derma care powder": "/productimages/Derma_care_powder.jpeg",
+  "esand pak": "/productimages/Erand_pak.jpeg",
+  "female cordial": "/productimages/hercordial_syrup.jpeg",
+  "gajwan ark": "/productimages/ARQ_Gaujawan.jpeg",
+  "garlic oil": "/productimages/Clove_oil.jpeg",
+  "giloy juice": "/productimages/giloy_kashaye.jpeg",
+  "giloy tablets": "/productimages/giloy_kashaye.jpeg",
+  "ginger oil": "/productimages/Clove_oil.jpeg",
+  "gokhru capsule": "/productimages/gokhru_powder.jpeg",
+  "gokhru powder": "/productimages/gokhru_powder.jpeg",
+  "gulab ark": "/productimages/Gulab_ARQ.jpeg",
+  "hadjod capsule": "/productimages/Arshar7_capsule.jpeg",
+  "harcodial syrup": "/productimages/hercordial_syrup.jpeg",
+  "haridra capsule": "/productimages/Haridra_khand.jpeg",
+  "herbocordial": "/productimages/hercordial_syrup.jpeg",
+  "hibiscus powder": "/productimages/Hibiscus_powder.jpeg",
+  "immunorattan": "/productimages/Immunerattan_syrup.jpeg",
+  "immunorattan syrup": "/productimages/Immunerattan_syrup.jpeg",
+  "immuvid": "/productimages/Immunerattan_syrup.jpeg",
+  "indigo powder": "/productimages/indigo_powder.jpeg",
+  "joshanda": "/productimages/joshanda.jpeg",
+  "joshanda kadha": "/productimages/joshanda_kada.jpeg",
+  "joshanda syrup": "/productimages/joshanda.jpeg",
+  "kaddu oil": "/productimages/Kaddu_oil.jpeg",
+  "kalounji oil": "/productimages/kalonji_oil.jpeg",
+  "karela jamun juice": "/productimages/karela_kashaye.jpeg",
+  "karela kashaya": "/productimages/karela_kashaye.jpeg",
+  "kaunch beej powder": "/productimages/kaunch_beej.jpeg",
+  "kastone": "/productimages/kastone-AB.jpeg",
+  "khasni ark": "/productimages/Arq_kashni.jpeg",
+  "khus khus oil": "/productimages/khas_khas_oil.jpeg",
+  "konch beej powder": "/productimages/kaunch_beej.jpeg",
+  "konch pak": "/productimages/Konch_pak.jpeg",
+  "kuff ratan": "/productimages/KuffRattan_syrup.jpeg",
+  "kuff ratan sf": "/productimages/KuffRattan_syrup.jpeg",
+  "kutaj cure": "/productimages/Kutajcare_syrup.jpeg",
+  "laxure adult": "/productimages/Laxure_syrup.jpeg",
+  "laxure kids": "/productimages/Laxure_syrup.jpeg",
+  "laxure kids syrup": "/productimages/Laxure_syrup.jpeg",
+  "laxure syrup": "/productimages/Laxure_syrup.jpeg",
+  "long & strong oil": "/productimages/mahanarayn_oil.jpeg",
+  "lauki oil": "/productimages/lowki_oil.jpeg",
+  "madhunashneem": "/productimages/Madhunashneem_churan.jpeg",
+  "madhunashneem capsule": "/productimages/Madhunashneem_churan.jpeg",
+  "madhunashneem powder": "/productimages/Madhunashneem_churan.jpeg",
+  "maha bhringraj oil": "/productimages/mahabhringraj_oil.jpeg",
+  "majun adam khas": "/productimages/Badam_pak.jpeg",
+  "makoy ark": "/productimages/Makoy_Arq.jpeg",
+  "malkangni oil": "/productimages/malkangni_oil.jpeg",
+  "methi oil": "/productimages/Methi_oil.jpeg",
+  "moosli pak": "/productimages/moosli_pak.jpeg",
+  "moringa powder": "/productimages/moringa_powder.jpeg",
+  "multani mitti": "/productimages/Multani_mitti_facepack.jpeg",
+  "mulethi powder": "/productimages/moringa_powder.jpeg",
+  "neem capsule": "/productimages/karela_kashaye.jpeg",
+  "neem karela jamun powder": "/productimages/karela_kashaye.jpeg",
+  "neem oil": "/productimages/indica_seed_oil.jpeg",
+  "neem powder": "/productimages/moringa_powder.jpeg",
+  "neem powder & oil": "/productimages/indica_seed_oil.jpeg",
+  "onion oil": "/productimages/hair_oil.jpeg",
+  "orange peel powder": "/productimages/Multani_mitti_facepack.jpeg",
+  "pachanrattan syrup": "/productimages/pachanrattan_syrup.jpeg",
+  "panchtrimool": "/productimages/moringa_powder.jpeg",
+  "parush ratan": "/productimages/active_energy.jpeg",
+  "pr gold capsule": "/productimages/Arshar7_capsule.jpeg",
+  "prg capsule": "/productimages/Arshar7_capsule.jpeg",
+  "punarnava ark": "/productimages/ARQ_Purnarnava.jpeg",
+  "rosemary oil": "/productimages/Methi_oil.jpeg",
+  "salam pak": "/productimages/Badam_pak.jpeg",
+  "sandal oil": "/productimages/Chameli_oil.jpeg",
+  "saunf ark": "/productimages/saunf_arq.jpeg",
+  "shankh pushpi": "/productimages/BrahmiAmrita_syrup.jpeg",
+  "shatavari": "/productimages/Shatawari_Powder.jpeg",
+  "shatavari capsule": "/productimages/Shatawari_Powder.jpeg",
+  "shatavari powder": "/productimages/Shatawari_Powder.jpeg",
+  "shilajit": "/productimages/Arshar7_capsule.jpeg",
+  "shilajit capsule": "/productimages/Arshar7_capsule.jpeg",
+  "shilajit resin": "/productimages/Arshar7_capsule.jpeg",
+  "slim fast capsules": "/productimages/Arshar7_capsule.jpeg",
+  "soft bowel": "/productimages/soft_Bowl_Churan.jpeg",
+  "soft bowel churna": "/productimages/soft_Bowl_Churan.jpeg",
+  "soft bowel junior": "/productimages/soft_Bowl_Churan.jpeg",
+  "supari pak": "/productimages/Badam_pak.jpeg",
+  "triphala capsule": "/productimages/amla_powder.jpeg",
+  "triphala churna": "/productimages/Bhumi_amla_churan.jpeg",
+  "tulsi drops": "/productimages/Ayurpure_syrup.jpeg",
+  "tulsi kashaya": "/productimages/joshanda_kada.jpeg",
+  "turmeric oil": "/productimages/Dalchini_oil.jpeg",
+  "uric acid syrup": "/productimages/uric_acid.jpeg",
+  "uri rattan tablet": "/productimages/uric_acid.jpeg",
+  "walnut oil": "/productimages/Lin_seed_oil.jpeg",
+  yakritrattan: "/productimages/Yakirattan.jpeg",
+};
+
+const categoryFallbackImageBySlug: Record<string, string> = {
+  capsules: "/productimages/Arshar7_capsule.jpeg",
+  churna: "/productimages/amla_powder.jpeg",
+  general: "/productimages/Ayurpure_syrup.jpeg",
+  oils: "/productimages/hair_oil.jpeg",
+  pak: "/productimages/Badam_pak.jpeg",
+  powders: "/productimages/moringa_powder.jpeg",
+  syrups: "/productimages/Ayurpure_syrup.jpeg",
+};
+
+function normalizeImagePath(value: string): string {
+  const trimmed = value.trim().replace(/^['"]+|['"]+$/g, "");
+  if (!trimmed) {
+    return "";
+  }
+
+  const normalized = trimmed.replace(/\\/g, "/");
+
+  if (/^(https?:)?\/\//i.test(normalized) || /^(data|blob):/i.test(normalized)) {
+    return encodeURI(normalized);
+  }
+
+  let normalizedPath = normalized;
+
+  if (normalizedPath.startsWith("public/")) {
+    normalizedPath = normalizedPath.slice("public".length);
+  }
+
+  if (!normalizedPath.startsWith("/")) {
+    normalizedPath = normalizedPath.includes("/")
+      ? `/${normalizedPath}`
+      : `/productimages/${normalizedPath}`;
+  }
+
+  normalizedPath = normalizedPath.replace(/\/{2,}/g, "/");
+  return encodeURI(normalizedPath);
+}
+
+function resolveProductImages(
+  name: string,
+  categorySlug: string,
+  customImages?: string[]
+): string[] {
+  const suppliedImages = (customImages ?? [])
+    .map((item) => normalizeImagePath(item))
+    .filter((item) => item.length > 0);
+
+  if (suppliedImages.length > 0) {
+    return suppliedImages;
+  }
+
+  const mapped = productImageByName[normalizeName(name)];
+  if (mapped) {
+    return [normalizeImagePath(mapped)];
+  }
+
+  const categoryFallback =
+    categoryFallbackImageBySlug[categorySlug] ??
+    categoryFallbackImageBySlug.general ??
+    blankProductImage;
+
+  return [categoryFallback];
+}
 
 function slugify(value: string): string {
   return value
@@ -216,9 +411,8 @@ function buildProduct(
   const reviews = 40 + (stable % 460);
   const featured = stable % 4 === 0;
   const originalPrice = Math.max(price, Math.round(price * 1.2));
-  const fallbackImage = blankProductImage;
-  const images = customImages && customImages.length > 0 ? customImages : [fallbackImage];
-  const image = images[0] ?? fallbackImage;
+  const images = resolveProductImages(name, categorySlug, customImages);
+  const image = images[0] ?? blankProductImage;
 
   return {
     id,
@@ -245,6 +439,10 @@ function buildProduct(
 }
 
 export async function fetchProductsFromSupabase(): Promise<Product[]> {
+  if (!hasSupabasePublicEnv) {
+    return [...fallbackCatalog];
+  }
+
   const [categoryResult, concernResult] = await Promise.all([
     queryWithRetry(async () =>
       await supabase
@@ -398,6 +596,10 @@ export function searchProductsInList(products: Product[], query: string): Produc
 }
 
 export function subscribeProductsRealtime(onChange: () => void): () => void {
+  if (!hasSupabasePublicEnv) {
+    return () => {};
+  }
+
   const byCategory = supabase
     .channel("products-by-category-live")
     .on(

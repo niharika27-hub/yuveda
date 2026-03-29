@@ -2,23 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import Lenis from "lenis";
+import { useEffect, useRef } from "react";
+import type { StringTune as StringTuneClass } from "@fiddle-digital/string-tune";
 import {
   ArrowRight,
   Droplets,
-  Leaf,
   HeartHandshake,
+  Leaf,
   Sparkles,
   Star,
 } from "lucide-react";
-import Lenis from "lenis";
-import { useEffect, useRef, useState } from "react";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 const storyChapters = [
@@ -57,17 +51,6 @@ const quotes = [
   },
 ];
 
-const ingredients = ["Neem", "Tulsi", "Amla", "Brahmi", "Ashwagandha", "Shatavari"];
-
-const mobileIngredientPositions = [
-  { left: 12, top: 16 },
-  { left: 88, top: 16 },
-  { left: 96, top: 50 },
-  { left: 78, top: 84 },
-  { left: 22, top: 84 },
-  { left: 4, top: 50 },
-];
-
 const ritualSteps = [
   {
     title: "Daily Alignment",
@@ -91,375 +74,580 @@ const ritualSteps = [
   },
 ];
 
-const originBlocks = [
+const stats = [
+  { label: "Formulations Crafted", value: "70+" },
+  { label: "Botanical Ingredients", value: "120+" },
+  { label: "Support Availability", value: "7 Days" },
+  { label: "Customer Satisfaction", value: "4.9/5" },
+];
+
+const ingredientSpotlight = [
   {
-    title: "Sourced With Integrity",
-    copy: "We partner with trusted growers and seasonal harvest cycles to preserve potency and purity.",
+    label: "NEEM",
+    image: "/images/neem-leaf.jpg",
+    alt: "Neem leaf ingredient spotlight",
   },
   {
-    title: "Crafted For Absorption",
-    copy: "Each formulation is structured for real-world use, blending classical methods and practical delivery.",
+    label: "TULSI",
+    image: "/images/tulsi-plant.jpg",
+    alt: "Tulsi plant ingredient spotlight",
   },
   {
-    title: "Backed By Transparency",
-    copy: "Clear labels, ingredient-led education, and responsive customer support at every stage.",
+    label: "AMLA",
+    image: "/images/amla.jpg",
+    alt: "Amla fruit ingredient spotlight",
+  },
+  {
+    label: "BRAHMI",
+    image: "/images/brahmi.jpg",
+    alt: "Brahmi herb ingredient spotlight",
+  },
+  {
+    label: "ASHWAGANDHA",
+    image: "/images/ashwagandha.jpg",
+    alt: "Ashwagandha ingredient spotlight",
+  },
+  {
+    label: "SHATAVARI",
+    image: "/images/shatavari.jpg",
+    alt: "Shatavari ingredient spotlight",
+  },
+  {
+    label: "GILOY",
+    image: "/images/giloy.jpg",
+    alt: "Giloy vine ingredient spotlight",
   },
 ];
+
+const ingredientMarquee = [...ingredientSpotlight, ...ingredientSpotlight];
 
 export function ImmersiveJourney() {
   const { products } = useRealtimeProducts();
   const pageRef = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
-  const [isCompactMotion, setIsCompactMotion] = useState(false);
-  const [isMobileHero, setIsMobileHero] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 900px), (pointer: coarse)");
-    const updateMotionMode = (event?: MediaQueryListEvent) => {
-      setIsCompactMotion(event ? event.matches : mediaQuery.matches);
+    let lenis: Lenis | null = null;
+    let stringTune: StringTuneClass | null = null;
+    let context: { revert: () => void } | null = null;
+    let rafId: number | null = null;
+    let canceled = false;
+
+    const initAnimations = async () => {
+      if (!pageRef.current) {
+        return;
+      }
+
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      const lowPowerDevice =
+        typeof navigator !== "undefined" &&
+        (navigator.hardwareConcurrency ?? 8) <= 6;
+      const enableHeavyEffects = !lowPowerDevice;
+
+      if (prefersReducedMotion) {
+        return;
+      }
+
+      const [{ gsap }, { ScrollTrigger }, stringTuneModule] =
+        await Promise.all([
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+          enableHeavyEffects ? import("@fiddle-digital/string-tune") : null,
+        ]);
+
+      if (canceled || !pageRef.current) {
+        return;
+      }
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      if (stringTuneModule) {
+        const { StringParallax, StringTune } = stringTuneModule;
+        stringTune = StringTune.getInstance();
+        stringTune.scrollDesktopMode = "default";
+        stringTune.scrollMobileMode = "default";
+        stringTune.setupSettings({
+          parallax: 0.09,
+          "parallax-bias": 0.14,
+        });
+        if (!stringTune.reuse(StringParallax)) {
+          stringTune.use(StringParallax);
+        }
+        stringTune.start(45);
+      }
+
+      lenis = new Lenis({
+        lerp: 0.11,
+        smoothWheel: true,
+        syncTouch: false,
+        wheelMultiplier: 0.9,
+        touchMultiplier: 0.9,
+      });
+
+      lenis.on("scroll", () => ScrollTrigger.update());
+
+      const updateLenis = (time: number) => {
+        lenis?.raf(time);
+        rafId = window.requestAnimationFrame(updateLenis);
+      };
+
+      rafId = window.requestAnimationFrame(updateLenis);
+
+      context = gsap.context(() => {
+        gsap.set(".js-hero-bg", {
+          scale: 1.04,
+          transformOrigin: "center center",
+        });
+
+        gsap.set(".js-hero-mid", {
+          yPercent: 0,
+          transformOrigin: "center center",
+        });
+
+        gsap.from(".js-hero-content", {
+          opacity: 0,
+          y: 26,
+          duration: 1.1,
+          ease: "power3.out",
+        });
+
+        gsap.to(".js-hero-bg", {
+          yPercent: 14,
+          scale: 1.14,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".js-hero-section",
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+
+        gsap.to(".js-hero-mid", {
+          yPercent: 8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".js-hero-section",
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+
+        gsap.set(".js-scroll-progress", {
+          scaleX: 0,
+          transformOrigin: "left center",
+        });
+
+        const setProgress = gsap.quickSetter(".js-scroll-progress", "scaleX");
+        ScrollTrigger.create({
+          start: 0,
+          end: "max",
+          onUpdate: (self) => setProgress(self.progress),
+        });
+
+        gsap.utils.toArray<HTMLElement>(".js-fade-on-scroll").forEach((element) => {
+          gsap.from(element, {
+            opacity: 0,
+            y: 24,
+            duration: 0.9,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: element,
+              start: "top 88%",
+              once: true,
+            },
+          });
+        });
+
+        gsap.from(".js-herb-feature", {
+          opacity: 0,
+          x: -90,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: "#product-highlights",
+            start: "top 74%",
+          },
+        });
+
+        gsap.from(".js-banyan-card", {
+          opacity: 0,
+          y: 55,
+          scale: 0.95,
+          duration: 1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".js-banyan-card",
+            start: "top 83%",
+          },
+        });
+      }, pageRef);
+
+      ScrollTrigger.refresh();
     };
 
-    updateMotionMode();
-    mediaQuery.addEventListener("change", updateMotionMode);
+    void initAnimations();
 
     return () => {
-      mediaQuery.removeEventListener("change", updateMotionMode);
+      canceled = true;
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      lenis?.destroy();
+      stringTune?.destroy();
+      context?.revert();
     };
   }, []);
 
   useEffect(() => {
-    const mobileQuery = window.matchMedia("(max-width: 640px)");
-    const updateMobileMode = (event?: MediaQueryListEvent) => {
-      setIsMobileHero(event ? event.matches : mobileQuery.matches);
-    };
-
-    updateMobileMode();
-    mobileQuery.addEventListener("change", updateMobileMode);
-
-    return () => {
-      mobileQuery.removeEventListener("change", updateMobileMode);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
+    if (!pageRef.current) {
       return;
     }
 
-    const lenis = new Lenis({
-      duration: prefersReducedMotion ? 0.85 : isCompactMotion ? 1.35 : 1.75,
-      easing: (t: number) => 1 - Math.pow(1 - t, 3),
-      smoothWheel: true,
-      syncTouch: false,
-      touchMultiplier: 0.82,
+    const supportsFinePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    ).matches;
+
+    if (!supportsFinePointer) {
+      return;
+    }
+
+    const targets = Array.from(
+      pageRef.current.querySelectorAll<HTMLElement>(".js-glass-tilt")
+    );
+
+    const cleanupHandlers = targets.map((el) => {
+      let rafToken = 0;
+
+      const reset = () => {
+        el.style.setProperty("--mx", "50%");
+        el.style.setProperty("--my", "50%");
+        el.style.setProperty("--rx", "0deg");
+        el.style.setProperty("--ry", "0deg");
+      };
+
+      const onMouseEnter = () => {
+        el.classList.add("is-hovering");
+      };
+
+      const onMouseMove = (event: MouseEvent) => {
+        const rect = el.getBoundingClientRect();
+        const nx = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+        const ny = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
+        const rotateX = (0.5 - ny) * 10;
+        const rotateY = (nx - 0.5) * 12;
+
+        if (rafToken) {
+          window.cancelAnimationFrame(rafToken);
+        }
+
+        rafToken = window.requestAnimationFrame(() => {
+          el.style.setProperty("--mx", `${nx * 100}%`);
+          el.style.setProperty("--my", `${ny * 100}%`);
+          el.style.setProperty("--rx", `${rotateX.toFixed(2)}deg`);
+          el.style.setProperty("--ry", `${rotateY.toFixed(2)}deg`);
+        });
+      };
+
+      const onMouseLeave = () => {
+        el.classList.remove("is-hovering");
+        if (rafToken) {
+          window.cancelAnimationFrame(rafToken);
+        }
+        reset();
+      };
+
+      reset();
+      el.addEventListener("mouseenter", onMouseEnter);
+      el.addEventListener("mousemove", onMouseMove);
+      el.addEventListener("mouseleave", onMouseLeave);
+
+      return () => {
+        if (rafToken) {
+          window.cancelAnimationFrame(rafToken);
+        }
+        el.removeEventListener("mouseenter", onMouseEnter);
+        el.removeEventListener("mousemove", onMouseMove);
+        el.removeEventListener("mouseleave", onMouseLeave);
+      };
     });
 
-    let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafId = window.requestAnimationFrame(raf);
-    };
-
-    rafId = window.requestAnimationFrame(raf);
-
     return () => {
-      window.cancelAnimationFrame(rafId);
-      lenis.destroy();
+      cleanupHandlers.forEach((cleanup) => cleanup());
     };
-  }, [isCompactMotion, prefersReducedMotion]);
-
-  const motionScale = prefersReducedMotion ? 0.28 : isCompactMotion ? 0.68 : 1;
-  const revealDuration = prefersReducedMotion ? 0.3 : isCompactMotion ? 0.58 : 0.8;
-  const staggerStep = prefersReducedMotion ? 0.04 : isCompactMotion ? 0.08 : 0.14;
-  const cardEntryY = prefersReducedMotion ? 18 : isCompactMotion ? 46 : 80;
-
-  const { scrollYProgress } = useScroll({
-    target: pageRef,
-    offset: ["start start", "end end"],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: prefersReducedMotion ? 140 : isCompactMotion ? 95 : 70,
-    damping: prefersReducedMotion ? 32 : isCompactMotion ? 26 : 22,
-    mass: 0.3,
-  });
-
-  const heroParallaxY = useTransform(smoothProgress, [0, 0.28], [0, 220 * motionScale]);
-  const heroTextY = useTransform(smoothProgress, [0, 0.2], [0, 90 * motionScale]);
-  const heroGlow = useTransform(
-    smoothProgress,
-    [0, 0.18],
-    [0.5, prefersReducedMotion ? 0.66 : 0.85]
-  );
-
+  }, []);
 
   const featured = products.filter((product) => product.featured).slice(0, 4);
+  const highlightedProducts =
+    featured.length > 0 ? featured : products.slice(0, 4);
 
   return (
-    <div
-      ref={pageRef}
-      className="relative overflow-x-clip"
-    >
-      <motion.div
-        style={{ scaleX: smoothProgress }}
-        className="fixed left-0 top-0 z-50 h-1 w-full origin-left bg-gradient-to-r from-[#1f6f43] via-[#7fa74d] to-[#f29f3d]"
-      />
+    <div ref={pageRef} className="relative overflow-x-clip">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] h-[3px]">
+        <div className="js-scroll-progress h-full w-full origin-left scale-x-0 bg-gradient-to-r from-[#c9a961] via-[#2f7a50] to-[#c9a961]/80" />
+      </div>
 
-      <div className="relative z-10">
+      <section className="js-hero-section relative min-h-screen overflow-hidden">
+        <div className="js-hero-bg absolute inset-0 will-change-transform">
+          <Image
+            src="/images/hero-forest.jpg"
+            alt=""
+            fill
+            priority
+            quality={92}
+            sizes="100vw"
+            className="object-cover [filter:brightness(0.74)_contrast(1.16)_saturate(1.08)_blur(1.2px)]"
+            aria-hidden
+          />
+        </div>
+        <div className="js-hero-mid absolute inset-0 will-change-transform bg-[radial-gradient(circle_at_22%_18%,rgba(255,214,160,0.18),rgba(255,214,160,0)_42%),radial-gradient(circle_at_78%_28%,rgba(255,255,255,0.08),rgba(255,255,255,0)_40%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(6,16,11,0.22),rgba(6,16,11,0.62))]" />
 
-      <section className="relative min-h-screen overflow-hidden">
-        <motion.div
-          style={{ y: heroParallaxY }}
-          className="absolute inset-0 pointer-events-none"
-        >
-          <div className="absolute left-[-8%] top-[-8%] h-[44vw] w-[44vw] rounded-full bg-[#2f8b4f]/15 blur-3xl" />
-          <div className="absolute right-[-15%] top-[15%] h-[34vw] w-[34vw] rounded-full bg-[#f4a13d]/20 blur-3xl" />
-          <div className="absolute bottom-[-18%] left-[28%] h-[40vw] w-[40vw] rounded-full bg-[#78a43d]/16 blur-3xl" />
-        </motion.div>
+        <div className="js-hero-content relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#F7F0E6]/85">
+              Ancient Wisdom. Modern Wellness.
+            </p>
+            <h1 className="mt-5 text-5xl font-semibold leading-[1.04] tracking-tight text-[#F7F0E6] sm:text-6xl lg:text-7xl">
+              Wellness that blooms
+              <br />
+              with every scroll.
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#F7F0E6]/90 sm:text-lg">
+              Yuveda blends herbal intelligence and mindful design into a calm,
+              cinematic experience grounded in Ayurveda.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <motion.div
-          style={{ opacity: heroGlow }}
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.7),rgba(255,255,255,0.08)_45%,transparent_70%)]"
-        />
+      <section className="relative bg-[#F7F0E6] px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#4f6b5d]">
+            Botanical Ingredient Ticker
+          </p>
+          <h2 className="mt-3 text-4xl font-semibold text-[#1A2E25] sm:text-5xl">
+            Ingredient Spotlight
+          </h2>
 
-        <div className="relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
-          <div className="grid w-full items-center gap-14 lg:grid-cols-2">
-            <motion.div style={{ y: heroTextY }} className="space-y-7">
-              <motion.h1
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: revealDuration, delay: staggerStep * 0.75 }}
-                className="text-5xl font-semibold leading-[1.04] tracking-tight text-[#173822] sm:text-6xl lg:text-7xl"
+          <div className="botanical-ticker mt-6">
+            <div className="botanical-track">
+              NEEM | TULSI | AMLA | BRAHMI | ASHWAGANDHA | SHATAVARI | NEEM |
+              GILOY | TULSI | AMLA | BRAHMI | ASHWAGANDHA | SHATAVARI |
+            </div>
+          </div>
+
+          <div className="ingredient-marquee mt-10" aria-label="Ingredient Spotlight Carousel">
+            <div className="ingredient-lane">
+              {ingredientMarquee.map((item, index) => (
+              <article
+                key={`${item.label}-${index}`}
+                className="js-ingredient-card ingredient-card group w-[min(82vw,270px)] shrink-0 rounded-[12px] border border-transparent bg-[#f4ead9] p-3 transition-all duration-700 ease-out hover:border-[#C9A84C] hover:shadow-[0_0_0_1px_rgba(201,168,76,0.7),0_12px_30px_rgba(201,168,76,0.28)] sm:w-[260px] lg:w-[280px]"
               >
-                Wellness that <span className="text-[#e07f11]">blooms</span>
-                <br />
-                with every scroll.
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: revealDuration, delay: staggerStep * 1.4 }}
-                className="max-w-xl text-base leading-relaxed text-[#355141] sm:text-lg"
-              >
-                Yuveda blends herbal intelligence and mindful design into a calm,
-                cinematic journey. Discover remedies that feel ancient, elevated,
-                and made for modern life.
-              </motion.p>
-
-              <motion.p
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: revealDuration, delay: staggerStep * 2 }}
-                className="text-sm uppercase tracking-[0.28em] text-[#4f6958]"
-              >
-                Ancient Wisdom. Modern Wellness.
-              </motion.p>
-            </motion.div>
-
-            <div className="relative mx-auto flex h-[430px] w-full max-w-[350px] items-center justify-center sm:h-[520px] sm:max-w-[520px]">
-              {ingredients.map((item, index) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, scale: 0.35 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true, amount: 0.5 }}
-                  transition={{ duration: revealDuration * 1.1, delay: staggerStep * index }}
-                  className={`ingredient-orb ${isMobileHero ? "ingredient-orb-mobile" : ""}`}
+                <div
+                  className="js-glass-tilt glass-hover-media relative aspect-square overflow-hidden rounded-[12px]"
                   style={{
-                    left: isMobileHero
-                      ? `${mobileIngredientPositions[index]?.left ?? 50}%`
-                      : `${50 + Math.cos((index / ingredients.length) * Math.PI * 2) * 35}%`,
-                    top: isMobileHero
-                      ? `${mobileIngredientPositions[index]?.top ?? 50}%`
-                      : `${50 + Math.sin((index / ingredients.length) * Math.PI * 2) * 35}%`,
-                    animationDelay: `${index * 0.55}s`,
+                    backgroundImage: `url('${item.image}')`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                   }}
                 >
-                  {item}
-                </motion.div>
-              ))}
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.7 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: revealDuration * 1.2, delay: staggerStep * 1.8 }}
-                className="relative z-10 flex h-44 w-44 items-center justify-center rounded-full border border-[#1f6f43]/25 bg-white/75 text-center backdrop-blur-lg sm:h-56 sm:w-56"
-              >
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-[#557163] sm:text-xs sm:tracking-[0.24em]">
-                    Botanical Harmony
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-[#174029] sm:mt-3 sm:text-3xl">
-                    Yuveda
-                  </p>
+                  <Image
+                    src={item.image}
+                    alt={item.alt}
+                    fill
+                    className="ingredient-media relative z-[1] object-cover"
+                    quality={86}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 24vw"
+                  />
                 </div>
-              </motion.div>
+                <h3 className="mt-4 text-center text-base font-semibold tracking-[0.08em] text-[#2D4A3E]">
+                  {item.label}
+                </h3>
+              </article>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="relative min-h-screen px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: revealDuration }}
-            className="mb-12 max-w-2xl"
+      <section
+        id="product-highlights"
+        className="relative bg-[#efe3d0] px-4 py-24 sm:px-6 lg:px-8"
+      >
+        <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2">
+          <figure
+            data-string="parallax"
+            data-string-parallax="0.045"
+            data-string-parallax-bias="0.08"
+            className="js-herb-feature js-glass-tilt glass-hover-media js-scroll-parallax relative min-h-[340px] overflow-hidden rounded-[1.3rem] border border-[#2D4A3E]/20 shadow-[0_22px_42px_rgba(0,0,0,0.15)] sm:min-h-[420px]"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#4e7a53]">
-              Product Highlights
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold text-[#1d402a] sm:text-5xl">
+            <Image
+              src="/images/herb-flatlay.jpg"
+              alt="Blooming Lotus Collection herb flatlay"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          </figure>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#4f6b5d]">
               Blooming Lotus Collection
+            </p>
+            <h2 className="mt-3 text-4xl font-semibold text-[#1A2E25] sm:text-5xl">
+              Product Highlights
             </h2>
             <p className="mt-4 text-[#476654]">
-              Each formula rises gently into focus, designed to solve real wellness concerns with elegant, minimal guidance.
+              Each formula is designed for practical ritual use while preserving
+              botanical depth and classical Ayurvedic intelligence.
             </p>
-          </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {featured.map((product, index) => (
-              <motion.article
-                key={product.id}
-                initial={{ opacity: 0, y: cardEntryY, scale: prefersReducedMotion ? 0.96 : 0.88 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.35 }}
-                transition={{ duration: revealDuration, delay: index * staggerStep }}
-                className="lotus-card group relative overflow-hidden rounded-[2rem] border border-[#1f6f43]/15 bg-[#fffdfa]/85 p-4 shadow-[0_20px_60px_rgba(27,55,35,0.14)] backdrop-blur"
-              >
-                <div className="relative h-56 w-full overflow-hidden rounded-[1.4rem]">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="absolute left-6 top-6 rounded-full bg-[#f29f3d]/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.17em] text-[#3a2100]">
-                  {product.badge ?? "Herbal Pick"}
-                </div>
-                <div className="pb-3 pt-5">
-                  <h3 className="text-xl font-semibold text-[#193d27]">{product.name}</h3>
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[#4f6b5a]">
-                    {product.shortDescription}
-                  </p>
-                </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-lg font-semibold text-[#1f6f43]">Rs. {product.price}</p>
+            <div className="mt-6 grid gap-4">
+              {highlightedProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="js-fade-on-scroll rounded-2xl border border-[#2D4A3E]/15 bg-white/86 p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-[#193d27]">
+                        {product.name}
+                      </h3>
+                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#4f6b5a]">
+                        {product.shortDescription}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-lg font-semibold text-[#1f6f43]">
+                      Rs. {product.price}
+                    </p>
+                  </div>
                   <Link
                     href={`/product/${product.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-[#1f6f43]/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#1f6f43] transition hover:bg-[#1f6f43] hover:text-white"
+                    className="mt-4 inline-flex items-center gap-1 rounded-full border border-[#1f6f43]/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#1f6f43] transition hover:bg-[#1f6f43] hover:text-white"
                   >
-                    View
+                    View Product
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
-                </div>
-              </motion.article>
-            ))}
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="relative min-h-screen overflow-hidden px-4 py-24 sm:px-6 lg:px-8">
-        <div className="flowing-water absolute inset-x-0 top-0 h-36" />
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: revealDuration }}
-            className="mx-auto mb-12 max-w-2xl text-center"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5b7c66]">
+      <div className="relative h-[180px] w-full overflow-hidden" aria-hidden>
+        <div
+          data-string="parallax"
+          data-string-parallax="0.028"
+          data-string-parallax-bias="0.18"
+          className="js-scroll-parallax absolute inset-0 will-change-transform"
+        >
+          <Image
+            src="/images/forest-floor.jpg"
+            alt=""
+            fill
+            className="object-cover"
+            sizes="100vw"
+          />
+        </div>
+      </div>
+
+      <section
+        id="brand-story"
+        className="bg-[linear-gradient(180deg,#13281f_0%,#1b3a2d_55%,#244837_100%)] px-4 py-20 sm:px-6 lg:px-8"
+      >
+        <div className="mx-auto grid max-w-7xl items-start gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d9ddc8]">
               Brand Story
             </p>
-            <h2 className="mt-3 text-4xl font-semibold text-[#173722] sm:text-5xl">
+            <h2 className="mt-3 text-4xl font-semibold text-[#F7F0E6] sm:text-5xl">
               Chapters of Care
             </h2>
-          </motion.div>
+            <p className="mt-4 max-w-2xl text-[#F7F0E6]/86">
+              Yuveda unfolds as a guided narrative of craft: from regenerative
+              sourcing to mindful extraction and transparent ritual design.
+            </p>
 
-          <div className="space-y-6">
-            {storyChapters.map((chapter, index) => {
-              const Icon = chapter.icon;
-              return (
-                <motion.article
-                  key={chapter.title}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -60 : 60 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.5 }}
-                  transition={{ duration: revealDuration, delay: index * (staggerStep * 0.9) }}
-                  className="story-chapter rounded-[2rem] border border-[#1f6f43]/15 bg-white/75 p-8 backdrop-blur-sm"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f6e6] text-[#1f6f43]">
-                      <Icon className="h-6 w-6" />
+            <div className="mt-8 space-y-6">
+              {storyChapters.map((chapter, index) => {
+                const Icon = chapter.icon;
+                return (
+                  <article
+                    key={chapter.title}
+                    className="flex gap-4 border-l border-[#C9A84C]/35 pl-4"
+                  >
+                    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f6e6] text-[#1f6f43]">
+                      <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-[#5b7c66]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#d2c08a]">
                         Chapter {index + 1}
                       </p>
-                      <h3 className="mt-1 text-2xl font-semibold text-[#163621]">
+                      <h3 className="mt-1 text-2xl font-semibold text-[#F7F0E6]">
                         {chapter.title}
                       </h3>
-                      <p className="mt-2 max-w-2xl text-[#4b6857]">
+                      <p className="mt-2 text-[#F7F0E6]/84">
                         {chapter.description}
                       </p>
                     </div>
-                  </div>
-                </motion.article>
-              );
-            })}
+                  </article>
+                );
+              })}
+            </div>
           </div>
+
+          <aside className="js-banyan-card self-stretch justify-self-center lg:justify-self-end">
+            <div className="js-glass-tilt glass-hover-media relative h-full min-h-[420px] w-[min(360px,100vw)] overflow-hidden rounded-2xl border border-[#C9A84C]/35 shadow-[0_18px_35px_rgba(0,0,0,0.25)]">
+              <Image
+                src="/images/banyan-tree.jpg"
+                alt="Banyan tree representing sustainability first"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 360px"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-4">
+                <p className="font-serif text-lg italic text-[#F7F0E6]">
+                  Rooted in centuries of botanical wisdom.
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
-      <section className="relative min-h-screen overflow-hidden px-4 py-24 sm:px-6 lg:px-8">
-        <div className="absolute left-[-8%] top-[14%] h-56 w-56 rounded-full bg-[#f3a43f]/20 blur-3xl" />
-        <div className="absolute right-[-12%] bottom-[10%] h-72 w-72 rounded-full bg-[#2e7c45]/18 blur-3xl" />
+      <section className="relative overflow-hidden bg-[#F7F0E6] px-4 py-24 sm:px-6 lg:px-8">
+        <div
+          data-string="parallax"
+          data-string-parallax="0.022"
+          data-string-parallax-bias="0.14"
+          className="js-scroll-parallax absolute inset-0 will-change-transform"
+        >
+          <Image
+            src="/images/leaf-texture.jpg"
+            alt=""
+            fill
+            className="pointer-events-none object-cover opacity-[0.12]"
+            sizes="100vw"
+            aria-hidden
+          />
+        </div>
+        <div className="relative mx-auto max-w-7xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5d7a67]">
+            Illuminated Customer Scrolls
+          </p>
+          <h2 className="mt-3 text-4xl font-semibold text-[#173821] sm:text-5xl">
+            Testimonials
+          </h2>
 
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: revealDuration }}
-            className="mb-12 text-center"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5d7a67]">
-              Interactive Testimonials
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold text-[#173821] sm:text-5xl">
-              Illuminated Customer Scrolls
-            </h2>
-          </motion.div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {quotes.map((quote, index) => (
-              <motion.article
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {quotes.map((quote) => (
+              <article
                 key={quote.name}
-                initial={{
-                  opacity: 0,
-                  y: prefersReducedMotion ? 20 : 48,
-                  rotate: prefersReducedMotion
-                    ? 0
-                    : index === 1
-                      ? 0
-                      : index === 0
-                        ? -2.2
-                        : 2.2,
-                }}
-                whileInView={{ opacity: 1, y: 0, rotate: index === 1 ? 0 : index === 0 ? -1 : 1 }}
-                viewport={{ once: true, amount: 0.45 }}
-                transition={{ duration: revealDuration * 0.95, delay: index * (staggerStep * 0.9) }}
-                className="ink-scroll relative rounded-[2rem] border border-[#1f6f43]/15 bg-[#fff8e8]/92 p-7 shadow-[0_18px_50px_rgba(61,43,19,0.16)]"
+                className="js-fade-on-scroll rounded-[1.3rem] border border-[#1f6f43]/15 bg-[#fff8e8]/92 p-7 shadow-[0_18px_50px_rgba(61,43,19,0.16)]"
               >
                 <div className="mb-5 flex items-center gap-1 text-[#e08b1d]">
                   {[0, 1, 2, 3, 4].map((star) => (
@@ -472,32 +660,71 @@ export function ImmersiveJourney() {
                 <p className="mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-[#1e6c3f]">
                   {quote.name}
                 </p>
-              </motion.article>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="relative min-h-[80vh] px-4 pb-28 pt-20 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-4xl flex-col items-center rounded-[2.6rem] border border-[#1f6f43]/20 bg-gradient-to-br from-[#f8fff3]/90 via-[#f4fbe9]/80 to-[#fff2de]/88 p-10 text-center shadow-[0_24px_80px_rgba(22,57,34,0.16)] backdrop-blur-sm sm:p-14">
-          <motion.div
-            initial={{ y: -60, opacity: 0, rotate: -15 }}
-            whileInView={{ y: 0, opacity: 1, rotate: 0 }}
-            viewport={{ once: true }}
-            transition={{
-              duration: revealDuration * 1.15,
-              ease: [0.2, 0.8, 0.2, 1],
-            }}
-            className="leaf-landing mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#2f8b4f]/15 text-[#1f6f43]"
-          >
-            <Leaf className="h-8 w-8" />
-          </motion.div>
+      <section className="bg-[#e9dfcf] px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map((item) => (
+              <article
+                key={item.label}
+                className="rounded-xl border border-[#2D4A3E]/20 bg-white/60 p-5 text-center"
+              >
+                <p className="text-4xl font-semibold text-[#2D4A3E]">
+                  {item.value}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[#5a7463]">
+                  {item.label}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <h2 className="text-4xl font-semibold text-[#173a22] sm:text-5xl">
+      <section className="bg-[#f6eee1] px-4 py-24 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#4c7858]">
+            Ritual Journey
+          </p>
+          <h2 className="mt-3 text-4xl font-semibold text-[#163621] sm:text-5xl">
+            A Slower Path To Lasting Wellness
+          </h2>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            {ritualSteps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <article
+                  key={step.title}
+                  className="rounded-3xl border border-[#1f6f43]/15 bg-white/92 p-6"
+                >
+                  <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e7f4e6] text-[#1f6f43]">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-[#1a3a25]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-[#4d6958]">{step.copy}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#2D4A3E] px-4 py-20 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-4xl font-semibold text-[#F7F0E6] sm:text-5xl">
             Begin your Ayurvedic ritual.
           </h2>
-          <p className="mt-4 max-w-2xl text-[#496755]">
-            Explore curated formulations, discover personalized routines, and let each purchase feel like a step toward deeper balance.
+          <p className="mt-4 text-[#F7F0E6]/90">
+            Explore curated formulations, discover personalized routines, and let
+            each purchase feel like a step toward deeper balance.
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
@@ -510,7 +737,7 @@ export function ImmersiveJourney() {
             </Link>
             <Link
               href="/consultation"
-              className="inline-flex items-center gap-2 rounded-full border border-[#1f6f43]/30 bg-white/70 px-7 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#1f6f43] transition hover:-translate-y-0.5 hover:border-[#1f6f43]"
+              className="inline-flex items-center gap-2 rounded-full border border-[#C9A84C]/60 bg-[#F7F0E6] px-7 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#2D4A3E] transition hover:-translate-y-0.5"
             >
               Connect With Yuveda
             </Link>
@@ -518,94 +745,229 @@ export function ImmersiveJourney() {
         </div>
       </section>
 
-      <section className="relative min-h-screen px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl rounded-[2.3rem] border border-white/30 bg-[#fff7eb]/92 p-8 shadow-[0_20px_70px_rgba(28,42,31,0.2)] backdrop-blur-sm sm:p-12">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.35 }}
-            transition={{ duration: revealDuration }}
-            className="mb-10 text-center"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#4e7558]">
-              Ritual Journey
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold text-[#173822] sm:text-5xl">
-              A Slower Path To Lasting Wellness
-            </h2>
-          </motion.div>
+      <style jsx>{`
+        .botanical-ticker {
+          overflow: hidden;
+          border-top: 1px solid rgba(45, 74, 62, 0.18);
+          border-bottom: 1px solid rgba(45, 74, 62, 0.18);
+          padding: 0.85rem 0;
+          white-space: nowrap;
+          color: #4a6557;
+          font-size: 0.88rem;
+          font-weight: 700;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
 
-          <div className="grid gap-5 md:grid-cols-2">
-            {ritualSteps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <motion.article
-                  key={step.title}
-                  initial={{ opacity: 0, y: 22 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: revealDuration * 0.9, delay: index * 0.08 }}
-                  className="rounded-3xl border border-[#1f6f43]/15 bg-white/92 p-6"
-                >
-                  <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e7f4e6] text-[#1f6f43]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#1a3a25]">{step.title}</h3>
-                  <p className="mt-2 text-[#4d6958]">{step.copy}</p>
-                </motion.article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+        .botanical-track {
+          display: inline-block;
+          padding-left: 100%;
+          animation: botanicalTicker 20s linear infinite;
+        }
 
-      <section className="relative min-h-screen px-4 pb-28 pt-10 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-6xl gap-8 rounded-[2.5rem] border border-white/25 bg-[#f5fbf0]/93 p-8 shadow-[0_24px_90px_rgba(23,49,33,0.22)] backdrop-blur-sm lg:grid-cols-[1.15fr_1fr] lg:p-12">
-          <motion.div
-            initial={{ opacity: 0, x: -22 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: revealDuration }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#4c7858]">
-              Ingredient Origins
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold text-[#163621] sm:text-5xl">
-              Built For Trust, Not Hype
-            </h2>
-            <div className="mt-7 space-y-4">
-              {originBlocks.map((block) => (
-                <article key={block.title} className="rounded-2xl border border-[#1f6f43]/12 bg-white/90 p-5">
-                  <h3 className="text-lg font-semibold text-[#1d3d28]">{block.title}</h3>
-                  <p className="mt-2 text-[#4b6756]">{block.copy}</p>
-                </article>
-              ))}
-            </div>
-          </motion.div>
+        @keyframes botanicalTicker {
+          to {
+            transform: translateX(-50%);
+          }
+        }
 
-          <motion.div
-            initial={{ opacity: 0, x: 22 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: revealDuration * 1.05 }}
-            className="grid content-start gap-4"
-          >
-            {[
-              { label: "Formulations Crafted", value: "70+" },
-              { label: "Botanical Ingredients", value: "120+" },
-              { label: "Care Support Availability", value: "7 Days" },
-            ].map((item) => (
-              <div key={item.label} className="rounded-3xl border border-[#1f6f43]/15 bg-[#fffdf8]/95 p-6 text-center">
-                <p className="text-4xl font-semibold text-[#1b6b3f]">{item.value}</p>
-                <p className="mt-2 text-sm uppercase tracking-[0.14em] text-[#5a7463]">
-                  {item.label}
-                </p>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-      </div>
+        @media (max-width: 900px) {
+          .botanical-track {
+            animation-duration: 24s;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .botanical-track {
+            animation: none;
+            transform: none;
+            padding-left: 0;
+          }
+
+          .ingredient-marquee {
+            overflow-x: auto;
+            scrollbar-width: none;
+          }
+
+          .ingredient-marquee::-webkit-scrollbar {
+            display: none;
+          }
+
+          .ingredient-lane,
+          .ingredient-card {
+            animation: none;
+            transform: none;
+          }
+        }
+
+        .ingredient-marquee {
+          overflow: hidden;
+          mask-image: linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 1) 8%,
+            rgba(0, 0, 0, 1) 92%,
+            rgba(0, 0, 0, 0)
+          );
+          -webkit-mask-image: linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 1) 8%,
+            rgba(0, 0, 0, 1) 92%,
+            rgba(0, 0, 0, 0)
+          );
+        }
+
+        .ingredient-lane {
+          display: flex;
+          gap: 1.2rem;
+          width: max-content;
+          animation: ingredientMarquee 52s linear infinite;
+        }
+
+        @media (max-width: 640px) {
+          .ingredient-marquee {
+            mask-image: linear-gradient(
+              to right,
+              rgba(0, 0, 0, 0),
+              rgba(0, 0, 0, 1) 4%,
+              rgba(0, 0, 0, 1) 96%,
+              rgba(0, 0, 0, 0)
+            );
+            -webkit-mask-image: linear-gradient(
+              to right,
+              rgba(0, 0, 0, 0),
+              rgba(0, 0, 0, 1) 4%,
+              rgba(0, 0, 0, 1) 96%,
+              rgba(0, 0, 0, 0)
+            );
+          }
+
+          .ingredient-lane {
+            gap: 0.85rem;
+            animation-duration: 60s;
+          }
+        }
+
+        .ingredient-card {
+          animation: ingredientDrift 7.8s ease-in-out infinite;
+        }
+
+        .ingredient-card:nth-child(2n) {
+          animation-delay: 1.2s;
+        }
+
+        .ingredient-card:nth-child(3n) {
+          animation-delay: 2.1s;
+        }
+
+        @keyframes ingredientMarquee {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @keyframes ingredientDrift {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
+        }
+
+        .js-scroll-parallax {
+          backface-visibility: hidden;
+          transform: translate3d(0, 0, 0);
+        }
+
+        .glass-hover-media {
+          --mx: 50%;
+          --my: 50%;
+          --rx: 0deg;
+          --ry: 0deg;
+          position: relative;
+          transform-style: preserve-3d;
+          transition:
+            transform 420ms cubic-bezier(0.2, 0.9, 0.2, 1),
+            box-shadow 420ms ease;
+          will-change: transform;
+        }
+
+        .glass-hover-media::before,
+        .glass-hover-media::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        .glass-hover-media::before {
+          background: radial-gradient(
+            circle at var(--mx) var(--my),
+            rgba(255, 255, 255, 0.46),
+            rgba(255, 255, 255, 0.02) 38%,
+            rgba(255, 255, 255, 0) 62%
+          );
+          opacity: 0;
+          transition: opacity 220ms ease;
+        }
+
+        .glass-hover-media::after {
+          background: linear-gradient(
+            120deg,
+            rgba(255, 255, 255, 0) 22%,
+            rgba(255, 255, 255, 0.35) 45%,
+            rgba(255, 255, 255, 0.06) 52%,
+            rgba(255, 255, 255, 0) 76%
+          );
+          transform: translateX(-120%);
+          opacity: 0;
+          transition:
+            transform 900ms ease,
+            opacity 420ms ease;
+        }
+
+        .glass-hover-media.is-hovering {
+          transform: perspective(960px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-2px);
+          box-shadow: 0 22px 44px rgba(18, 40, 28, 0.22);
+        }
+
+        .ingredient-media {
+          transition: transform 900ms ease;
+        }
+
+        .js-ingredient-card:hover .ingredient-media {
+          transform: scale(1.055);
+        }
+
+        .glass-hover-media.is-hovering::before {
+          opacity: 1;
+        }
+
+        .glass-hover-media.is-hovering::after {
+          opacity: 0.9;
+          transform: translateX(120%);
+        }
+
+        @media (hover: none), (pointer: coarse) {
+          .glass-hover-media,
+          .glass-hover-media.is-hovering {
+            transform: none;
+            box-shadow: none;
+          }
+
+          .glass-hover-media::before,
+          .glass-hover-media::after {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -2,12 +2,15 @@
 
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
-const siteBackgroundImage = "/journey/seed-to-herb.webp";
+const siteBackgroundImage = "/images/hero-forest.jpg";
 
 export function GlobalBackground() {
   const prefersReducedMotion = useReducedMotion();
   const [isCompactMotion, setIsCompactMotion] = useState(false);
+  const pathname = usePathname();
+  const isHomeRoute = pathname === "/";
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 900px), (pointer: coarse)");
@@ -33,12 +36,12 @@ export function GlobalBackground() {
   const backgroundScale = useTransform(
     smoothProgress,
     [0, 1],
-    [1.04, prefersReducedMotion ? 1.05 : isCompactMotion ? 1.08 : 1.13]
+    [1.02, prefersReducedMotion ? 1.04 : isCompactMotion ? 1.06 : 1.1]
   );
   const backgroundY = useTransform(
     smoothProgress,
     [0, 1],
-    [0, prefersReducedMotion ? -12 : isCompactMotion ? -30 : -64]
+    [0, prefersReducedMotion ? -10 : isCompactMotion ? -22 : -48]
   );
 
   return (
@@ -49,9 +52,27 @@ export function GlobalBackground() {
     >
       <motion.div
         className="absolute inset-[-5%] bg-cover bg-center bg-no-repeat will-change-transform"
-        style={{ backgroundImage: `url(${siteBackgroundImage})`, scale: backgroundScale }}
+        style={{
+          backgroundImage: `url(${siteBackgroundImage})`,
+          scale: backgroundScale,
+          opacity: isHomeRoute ? 0.48 : 0.7,
+        }}
       />
-      <div className="absolute inset-0 bg-black/20" />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundColor: isHomeRoute
+            ? "rgba(16, 35, 25, 0.34)"
+            : "rgba(16, 35, 25, 0.52)",
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 20% 15%, rgba(201,168,76,0.15), transparent 45%), radial-gradient(circle at 85% 78%, rgba(45,74,62,0.24), transparent 44%)",
+        }}
+      />
     </motion.div>
   );
 }

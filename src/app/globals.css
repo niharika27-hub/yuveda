@@ -104,7 +104,7 @@
     color: #201B12;
   }
   html {
-    @apply font-sans scroll-smooth;
+    @apply font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-playfair);
@@ -137,6 +137,25 @@
   background: rgba(218, 229, 222, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-nav {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(243, 250, 246, 0.42), rgba(232, 244, 236, 0.18)),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.28), rgba(199, 226, 209, 0.12));
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow:
+    0 12px 30px rgba(20, 43, 29, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.glass-nav--solid {
+  border-bottom-color: rgba(218, 233, 224, 0.74);
+  background:
+    linear-gradient(180deg, rgba(241, 250, 245, 0.9), rgba(226, 241, 233, 0.72)),
+    linear-gradient(130deg, rgba(255, 255, 255, 0.52), rgba(198, 224, 208, 0.3));
 }
 
 .glass-grid-panel {

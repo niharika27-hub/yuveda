@@ -79,11 +79,11 @@ export function Navbar() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
-            ? "glass shadow-ambient py-3"
-            : "bg-transparent py-5"
+            ? "glass-nav glass-nav--solid py-2"
+            : "glass-nav py-3"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-7">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="group inline-flex items-center">
@@ -94,12 +94,12 @@ export function Navbar() {
                 height={154}
                 priority
                 onError={() => setLogoSrc("/yuveda-logo.svg")}
-                className="h-12 w-auto sm:h-16 md:h-20 lg:h-24 xl:h-28 object-contain transition-opacity group-hover:opacity-90"
+                className="h-10 w-auto sm:h-11 md:h-12 lg:h-14 xl:h-16 object-contain transition-opacity group-hover:opacity-90"
               />
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-0.5">
               {navLinks.map((link) => (
                 <div
                   key={link.href}
@@ -111,7 +111,7 @@ export function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    className="px-4 py-2 text-sm font-medium text-[#201B12] hover:text-[#1F5D3B] transition-colors rounded-full hover:bg-[#E8F3EC]/60 flex items-center gap-1"
+                    className="px-3 py-1.5 text-sm font-medium text-[#201B12] hover:text-[#1F5D3B] transition-colors rounded-full hover:bg-[#E8F3EC]/60 flex items-center gap-1"
                   >
                     {link.label}
                     {link.children && (
@@ -127,7 +127,7 @@ export function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-1 w-48 py-2 bg-white rounded-2xl shadow-ambient-lg overflow-hidden"
+                        className="absolute top-full left-0 mt-1 w-48 overflow-hidden rounded-2xl border border-white/55 bg-[rgba(248,253,249,0.84)] py-2 shadow-ambient-lg backdrop-blur-xl"
                       >
                         {link.children.map((child) => (
                           <Link
@@ -146,12 +146,12 @@ export function Navbar() {
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {/* Search */}
               <div ref={searchRef} className="relative">
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
-                  className="p-2.5 rounded-full hover:bg-[#E8F3EC]/60 transition-colors"
+                  className="p-2 rounded-full hover:bg-[#E8F3EC]/60 transition-colors"
                   aria-label="Search"
                 >
                   <Search className="w-5 h-5 text-[#201B12]" />
@@ -163,7 +163,7 @@ export function Navbar() {
                       initial={{ opacity: 0, scale: 0.95, y: 8 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                      className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-ambient-lg overflow-hidden"
+                      className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[72vh] overflow-hidden rounded-2xl border border-white/55 bg-[rgba(248,253,249,0.9)] shadow-ambient-lg backdrop-blur-xl"
                     >
                       <div className="p-3">
                         <input
@@ -176,7 +176,7 @@ export function Navbar() {
                         />
                       </div>
                       {searchResults.length > 0 && (
-                        <div className="px-2 pb-2">
+                        <div className="max-h-[46vh] overflow-y-auto px-2 pb-2">
                           {searchResults.map((product) => (
                             <Link
                               key={product.id}
@@ -214,7 +214,7 @@ export function Navbar() {
               {/* Wishlist */}
               <Link
                 href="/wishlist"
-                className="p-2.5 rounded-full hover:bg-[#E8F3EC]/60 transition-colors relative hidden sm:flex"
+                className="p-2 rounded-full hover:bg-[#E8F3EC]/60 transition-colors relative hidden sm:flex"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5 text-[#201B12]" />
@@ -228,7 +228,7 @@ export function Navbar() {
               {/* Cart */}
               <Link
                 href="/cart"
-                className="p-2.5 rounded-full hover:bg-[#E8F3EC]/60 transition-colors relative"
+                className="p-2 rounded-full hover:bg-[#E8F3EC]/60 transition-colors relative"
                 aria-label="Cart"
               >
                 <ShoppingCart className="w-5 h-5 text-[#201B12]" />
@@ -242,7 +242,7 @@ export function Navbar() {
               {/* User */}
               <Link
                 href="/login"
-                className="p-2.5 rounded-full hover:bg-[#E8F3EC]/60 transition-colors hidden sm:flex"
+                className="p-2 rounded-full hover:bg-[#E8F3EC]/60 transition-colors hidden sm:flex"
                 aria-label="Account"
               >
                 <User className="w-5 h-5 text-[#201B12]" />
@@ -251,7 +251,7 @@ export function Navbar() {
               {/* Mobile menu toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 rounded-full hover:bg-[#E8F3EC]/60 transition-colors"
+                className="lg:hidden p-2 rounded-full hover:bg-[#E8F3EC]/60 transition-colors"
                 aria-label="Menu"
               >
                 {mobileMenuOpen ? (
@@ -273,7 +273,7 @@ export function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-40 bg-[#FFF8F3] pt-24 px-6 lg:hidden overflow-y-auto"
+            className="fixed inset-0 z-40 overflow-y-auto bg-[rgba(252,246,239,0.9)] px-6 pt-24 backdrop-blur-xl lg:hidden"
           >
             <div className="space-y-1">
               {navLinks.map((link) => (
