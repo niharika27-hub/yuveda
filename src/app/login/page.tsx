@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Leaf } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { isAdminEmail } from "@/lib/admin";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function LoginPage() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace("/profile");
+        router.replace(isAdminEmail(session.user.email) ? "/admin" : "/profile");
       }
     };
 
@@ -63,7 +64,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/profile");
+      router.push(isAdminEmail(email) ? "/admin" : "/profile");
       router.refresh();
       setLoading(false);
       return;
@@ -104,7 +105,7 @@ export default function LoginPage() {
       });
     }
 
-    router.push("/profile");
+    router.push(isAdminEmail(email) ? "/admin" : "/profile");
     router.refresh();
     setLoading(false);
   };

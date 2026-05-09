@@ -27,7 +27,7 @@ if (!hasSupabasePublicEnv) {
 
 export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
-    autoRefreshToken: false,
-    persistSession: false,
+    autoRefreshToken: true,
+    persistSession: true,
   },
 });
