@@ -4,7 +4,7 @@ import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingCart, Heart, SlidersHorizontal, X, ChevronDown } from "lucide-react";
-import { Product } from "@/lib/products-live";
+import { getProductPriceLabel, isProductPurchasable, Product, PriceVariant } from "@/lib/products-live";
 import { categories } from "@/lib/categories";
 import { concerns } from "@/lib/concerns";
 import { useCartStore } from "@/store/useCartStore";
@@ -15,6 +15,11 @@ function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
   const { addItem: addWish, removeItem: removeWish, isInWishlist } = useWishlistStore();
   const wishlisted = isInWishlist(product.id);
+  const [selectedVariant, setSelectedVariant] = useState<PriceVariant | undefined>(
+    product.priceVariants[0]
+  );
+  const purchasable = isProductPurchasable(product);
+  const hasVariants = product.priceVariants.length > 1;
 
   return (
     <motion.div
@@ -33,7 +38,7 @@ function ProductCard({ product }: { product: Product }) {
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-contain p-3 transition-transform duration-700 group-hover:scale-105"
           />
           {product.badge && (
             <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#1F5D3B] text-white text-xs font-medium">
@@ -83,7 +88,7 @@ function ProductCard({ product }: { product: Product }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-[#1F5D3B]">
-              ₹{product.price}
+              {getProductPriceLabel(product)}
             </span>
             {product.originalPrice > product.price && (
               <span className="text-sm text-[#56615B] line-through">
@@ -93,12 +98,31 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
       </Link>
+      {hasVariants && (
+        <select
+          value={selectedVariant?.quantity ?? ""}
+          onChange={(e) =>
+            setSelectedVariant(
+              product.priceVariants.find((variant) => variant.quantity === e.target.value)
+            )
+          }
+          className="w-full mt-2 glass-grid-panel appearance-none px-3 py-2 rounded-xl text-xs font-medium focus:outline-none cursor-pointer"
+          aria-label={`Select pack size for ${product.name}`}
+        >
+          {product.priceVariants.map((variant) => (
+            <option key={`${variant.quantity}-${variant.price}`} value={variant.quantity}>
+              {variant.quantity} - {variant.priceLabel}
+            </option>
+          ))}
+        </select>
+      )}
       <button
-        onClick={() => addItem(product)}
-        className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#E8F3EC] text-[#1F5D3B] text-sm font-medium hover:bg-[#1F5D3B] hover:text-white transition-all duration-300"
+        onClick={() => addItem(product, 1, selectedVariant)}
+        disabled={!purchasable}
+        className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#E8F3EC] text-[#1F5D3B] text-sm font-medium hover:bg-[#1F5D3B] hover:text-white transition-all duration-300 disabled:cursor-not-allowed disabled:bg-[#EDE1D2] disabled:text-[#8A8F88]"
       >
         <ShoppingCart className="w-4 h-4" />
-        Add to Cart
+        {purchasable ? "Add to Cart" : "Price unavailable"}
       </button>
     </motion.div>
   );

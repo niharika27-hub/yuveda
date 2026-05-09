@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CreditCard, Smartphone, Truck, CheckCircle2, ArrowLeft } from "lucide-react";
-import { useCartStore } from "@/store/useCartStore";
+import { getCartItemId, getCartItemPrice, useCartStore } from "@/store/useCartStore";
 
 export default function CheckoutPage() {
   const { items, getTotal, clearCart } = useCartStore();
@@ -85,15 +85,18 @@ export default function CheckoutPage() {
               <h2 className="font-serif text-xl text-[#201B12] mb-5">Order Summary</h2>
               <div className="space-y-3 mb-5">
                 {items.map((item) => (
-                  <div key={item.product.id} className="flex items-center gap-3">
+                  <div key={getCartItemId(item.product, item.variant)} className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-[#F2E6D7] overflow-hidden flex-shrink-0">
-                      <img src={item.product.image} alt="" className="w-full h-full object-cover" />
+                      <img src={item.product.image} alt="" className="w-full h-full object-contain p-1" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-[#201B12] truncate">{item.product.name}</p>
+                      <p className="text-xs text-[#56615B]">
+                        {item.variant ? `${item.variant.quantity} - ${item.variant.priceLabel}` : "Standard pack"}
+                      </p>
                       <p className="text-xs text-[#56615B]">Qty: {item.quantity}</p>
                     </div>
-                    <span className="text-sm font-medium">₹{item.product.price * item.quantity}</span>
+                    <span className="text-sm font-medium">₹{getCartItemPrice(item) * item.quantity}</span>
                   </div>
                 ))}
               </div>

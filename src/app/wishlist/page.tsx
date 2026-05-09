@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { useCartStore } from "@/store/useCartStore";
+import { getProductPriceLabel, isProductPurchasable } from "@/lib/products-live";
 
 export default function WishlistPage() {
   const { items, removeItem, clearWishlist } = useWishlistStore();
@@ -43,7 +44,7 @@ export default function WishlistPage() {
             <motion.div key={product.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="group">
               <Link href={`/product/${product.id}`} className="block bg-white rounded-2xl overflow-hidden shadow-ambient-sm hover:shadow-ambient transition-all duration-500 hover:-translate-y-1">
                 <div className="relative h-52 overflow-hidden bg-[#F2E6D7]">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={product.image} alt={product.name} className="w-full h-full object-contain p-3 transition-transform duration-700 group-hover:scale-105" />
                   <button onClick={(e) => { e.preventDefault(); removeItem(product.id); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-red-50 transition-colors">
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </button>
@@ -52,13 +53,13 @@ export default function WishlistPage() {
                   <p className="text-xs text-[#56615B] mb-1">{product.category}</p>
                   <h3 className="font-serif text-base text-[#201B12] font-medium mb-2 line-clamp-1">{product.name}</h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-[#1F5D3B]">₹{product.price}</span>
+                    <span className="text-lg font-bold text-[#1F5D3B]">{getProductPriceLabel(product)}</span>
                     {product.originalPrice > product.price && <span className="text-sm text-[#56615B] line-through">₹{product.originalPrice}</span>}
                   </div>
                 </div>
               </Link>
-              <button onClick={() => { addToCart(product); removeItem(product.id); }} className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#E8F3EC] text-[#1F5D3B] text-sm font-medium hover:bg-[#1F5D3B] hover:text-white transition-all">
-                <ShoppingCart className="w-4 h-4" /> Move to Cart
+              <button onClick={() => { addToCart(product); removeItem(product.id); }} disabled={!isProductPurchasable(product)} className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#E8F3EC] text-[#1F5D3B] text-sm font-medium hover:bg-[#1F5D3B] hover:text-white transition-all disabled:cursor-not-allowed disabled:bg-[#EDE1D2] disabled:text-[#8A8F88]">
+                <ShoppingCart className="w-4 h-4" /> {isProductPurchasable(product) ? "Move to Cart" : "Price unavailable"}
               </button>
             </motion.div>
           ))}

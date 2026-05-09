@@ -96,6 +96,14 @@ export default function LoginPage() {
       return;
     }
 
+    if (data.user) {
+      await supabase.from("profiles").upsert({
+        id: data.user.id,
+        full_name: fullName.trim(),
+        phone: phone.trim() || null,
+      });
+    }
+
     router.push("/profile");
     router.refresh();
     setLoading(false);

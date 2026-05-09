@@ -9,6 +9,8 @@ export interface Product {
   categorySlug: string;
   price: number;
   originalPrice: number;
+  priceLabel: string;
+  priceVariants: PriceVariant[];
   rating: number;
   reviews: number;
   description: string;
@@ -22,6 +24,12 @@ export interface Product {
   inStock: boolean;
   featured: boolean;
   badge?: string;
+}
+
+export interface PriceVariant {
+  quantity: string;
+  price: number;
+  priceLabel: string;
 }
 
 type CategoryRow = {
@@ -183,6 +191,13 @@ const categoryFallbackImageBySlug: Record<string, string> = {
   syrups: "/productimages/Ayurpure_syrup.jpeg",
 };
 
+const comingSoonImage = "/images/coming-soon.svg";
+
+const suppressedFallbackImageNames = new Set([
+  "amla juice",
+  "shankh pushpi",
+]);
+
 function normalizeImagePath(value: string): string {
   const trimmed = value.trim().replace(/^['"]+|['"]+$/g, "");
   if (!trimmed) {
@@ -214,7 +229,8 @@ function normalizeImagePath(value: string): string {
 function resolveProductImages(
   name: string,
   categorySlug: string,
-  customImages?: string[]
+  customImages?: string[],
+  allowFallback: boolean = true
 ): string[] {
   const suppliedImages = (customImages ?? [])
     .map((item) => normalizeImagePath(item))
@@ -222,6 +238,14 @@ function resolveProductImages(
 
   if (suppliedImages.length > 0) {
     return suppliedImages;
+  }
+
+  if (!allowFallback) {
+    return [comingSoonImage];
+  }
+
+  if (suppressedFallbackImageNames.has(normalizeName(name))) {
+    return [comingSoonImage];
   }
 
   const mapped = productImageByName[normalizeName(name)];
@@ -297,6 +321,84 @@ function parsePrice(value: unknown): number {
   }
 
   return 0;
+}
+
+function splitListValue(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+function formatPriceLabel(value: string, price: number): string {
+  const trimmed = value.trim();
+  if (trimmed.includes("₹")) {
+    return trimmed;
+  }
+  if (trimmed.length > 0) {
+    return `₹${trimmed}`;
+  }
+  return price > 0 ? `₹${price}` : "Price unavailable";
+}
+
+function parsePriceVariants(quantity: string, priceValue: unknown): PriceVariant[] {
+  const rawPrice =
+    typeof priceValue === "number" && Number.isFinite(priceValue)
+      ? String(priceValue)
+      : typeof priceValue === "string"
+        ? priceValue.trim()
+        : "";
+
+  if (!rawPrice) {
+    return [];
+  }
+
+  const quantities = splitListValue(quantity);
+  const prices = splitListValue(rawPrice);
+
+  return prices
+    .map((priceText, index) => {
+      const price = parsePrice(priceText);
+      if (price <= 0) {
+        return null;
+      }
+
+      return {
+        quantity: quantities[index] ?? quantities[0] ?? "Standard pack",
+        price,
+        priceLabel: formatPriceLabel(priceText, price),
+      };
+    })
+    .filter((item): item is PriceVariant => item !== null);
+}
+
+export function getDefaultPriceVariant(product: Product): PriceVariant | undefined {
+  return product.priceVariants?.[0];
+}
+
+export function getProductPrice(product: Product, variant?: PriceVariant): number {
+  return variant?.price ?? getDefaultPriceVariant(product)?.price ?? product.price;
+}
+
+export function isProductPurchasable(product: Product): boolean {
+  return ((product.priceVariants?.length ?? 0) > 0 || product.price > 0) && getProductPrice(product) > 0;
+}
+
+export function getProductPriceLabel(product: Product): string {
+  const priceVariants = product.priceVariants ?? [];
+
+  if (priceVariants.length === 0) {
+    if (product.price > 0) {
+      return product.priceLabel ?? `₹${product.price}`;
+    }
+    return "Price unavailable";
+  }
+
+  if (priceVariants.length > 1) {
+    return `From ${product.priceLabel}`;
+  }
+
+  return product.priceLabel;
 }
 
 function parseImages(value: unknown): string[] {
@@ -401,17 +503,26 @@ function buildProduct(
   category: string,
   categorySlug: string,
   quantity: string,
-  price: number,
+  price: unknown,
   concerns: string[],
-  customImages?: string[]
+  customImages?: string[],
+  allowFallback: boolean = true
 ): Product {
   const id = slugify(name);
   const stable = hashCode(name);
   const rating = 4.1 + (stable % 9) / 10;
   const reviews = 40 + (stable % 460);
   const featured = stable % 4 === 0;
-  const originalPrice = Math.max(price, Math.round(price * 1.2));
-  const images = resolveProductImages(name, categorySlug, customImages);
+  const priceVariants = parsePriceVariants(quantity, price);
+  const parsedPrice = parsePrice(price);
+  const lowestVariant = priceVariants.reduce<PriceVariant | undefined>(
+    (lowest, variant) => (!lowest || variant.price < lowest.price ? variant : lowest),
+    undefined
+  );
+  const displayPrice = lowestVariant?.price ?? parsedPrice;
+  const priceLabel = lowestVariant?.priceLabel ?? "Price unavailable";
+  const originalPrice = displayPrice;
+  const images = resolveProductImages(name, categorySlug, customImages, allowFallback);
   const image = images[0] ?? blankProductImage;
 
   return {
@@ -420,8 +531,10 @@ function buildProduct(
     name,
     category,
     categorySlug,
-    price,
+    price: displayPrice,
     originalPrice,
+    priceLabel,
+    priceVariants,
     rating: Number(rating.toFixed(1)),
     reviews,
     description: `${name} is sourced from your live Supabase catalog and curated in our ${category} range for everyday Ayurvedic wellness support.`,
@@ -438,9 +551,35 @@ function buildProduct(
   };
 }
 
+function normalizeLegacyProduct(product: Product): Product {
+  const priceVariants =
+    product.priceVariants?.length > 0
+      ? product.priceVariants
+      : product.price > 0
+        ? [
+            {
+              quantity: product.shortDescription || "Standard pack",
+              price: product.price,
+              priceLabel: `₹${product.price}`,
+            },
+          ]
+        : [];
+
+  return {
+    ...product,
+    originalPrice: product.originalPrice ?? product.price,
+    priceLabel: product.priceLabel ?? priceVariants[0]?.priceLabel ?? "Price unavailable",
+    priceVariants,
+  };
+}
+
+export function getFallbackProducts(): Product[] {
+  return (fallbackCatalog as Product[]).map(normalizeLegacyProduct);
+}
+
 export async function fetchProductsFromSupabase(): Promise<Product[]> {
   if (!hasSupabasePublicEnv) {
-    return [...fallbackCatalog];
+    return getFallbackProducts();
   }
 
   const [categoryResult, concernResult] = await Promise.all([
@@ -467,11 +606,11 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
         concernError: concernResult.errorMessage,
       }
     );
-    return [...fallbackCatalog];
+    return getFallbackProducts();
   }
 
   if (categoryData.length === 0 && concernData.length === 0) {
-    return [...fallbackCatalog];
+    return getFallbackProducts();
   }
 
   const concernsByName = new Map<string, Set<string>>();
@@ -513,14 +652,23 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     const category = (row.Category ?? "General Wellness").trim() || "General Wellness";
     const categorySlug = categoryToSlug(category);
     const quantity = (row.Quantity ?? "").trim();
-    const price = parsePrice(row.Price) || priceByName.get(key) || 0;
+    const price = row.Price ?? priceByName.get(key) ?? 0;
     const concerns = Array.from(concernsByName.get(key) ?? []);
     const images = parseImages(row.images);
     const mergedImages = images.length > 0 ? images : imagesByName.get(key) ?? [];
 
     productsByName.set(
       key,
-      buildProduct(name, category, categorySlug, quantity, price, concerns, mergedImages)
+      buildProduct(
+        name,
+        category,
+        categorySlug,
+        quantity,
+        price,
+        concerns,
+        mergedImages,
+        true
+      )
     );
   }
 
@@ -532,13 +680,22 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     if (productsByName.has(key)) continue;
 
     const concerns = Array.from(concernsByName.get(key) ?? []);
-    const price = parsePrice(row.Price) || 0;
+    const price = row.Price ?? 0;
     const quantity = (row.Quantity ?? "").trim();
     const images = parseImages(row.images);
 
     productsByName.set(
       key,
-      buildProduct(name, "General Wellness", "general", quantity, price, concerns, images)
+      buildProduct(
+        name,
+        "General Wellness",
+        "general",
+        quantity,
+        price,
+        concerns,
+        images,
+        true
+      )
     );
   }
 
@@ -548,7 +705,7 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
 
   // If live rows are malformed (for example, missing product names), avoid rendering an empty catalog.
   if (mergedProducts.length === 0) {
-    return [...fallbackCatalog];
+    return getFallbackProducts();
   }
 
   return mergedProducts;

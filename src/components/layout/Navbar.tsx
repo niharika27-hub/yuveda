@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { searchProductsInList } from "@/lib/products-live";
+import { getProductPriceLabel, searchProductsInList } from "@/lib/products-live";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 const navLinks = [
@@ -191,7 +191,7 @@ export function Navbar() {
                                 <img
                                   src={product.image}
                                   alt={product.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain p-1"
                                 />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -199,7 +199,7 @@ export function Navbar() {
                                   {product.name}
                                 </p>
                                 <p className="text-xs text-[#C9A961] font-medium">
-                                  ₹{product.price}
+                                  {getProductPriceLabel(product)}
                                 </p>
                               </div>
                             </Link>

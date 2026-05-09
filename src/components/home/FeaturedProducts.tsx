@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart } from "lucide-react";
-import { Product } from "@/lib/products-live";
+import { getProductPriceLabel, isProductPurchasable, Product } from "@/lib/products-live";
 import { useCartStore } from "@/store/useCartStore";
 import { useRef } from "react";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 
 function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
+  const purchasable = isProductPurchasable(product);
 
   return (
     <div className="flex-shrink-0 w-[280px] group">
@@ -21,7 +22,7 @@ function ProductCard({ product }: { product: Product }) {
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-contain p-3 transition-transform duration-700 group-hover:scale-105"
           />
           {product.badge && (
             <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#1F5D3B] text-white text-xs font-medium">
@@ -64,7 +65,7 @@ function ProductCard({ product }: { product: Product }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-[#1F5D3B]">
-                ₹{product.price}
+                {getProductPriceLabel(product)}
               </span>
               {product.originalPrice > product.price && (
                 <span className="text-sm text-[#56615B] line-through">
@@ -80,10 +81,11 @@ function ProductCard({ product }: { product: Product }) {
           e.preventDefault();
           addItem(product);
         }}
-        className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#E8F3EC] text-[#1F5D3B] text-sm font-medium hover:bg-[#1F5D3B] hover:text-white transition-all duration-300"
+        disabled={!purchasable}
+        className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#E8F3EC] text-[#1F5D3B] text-sm font-medium hover:bg-[#1F5D3B] hover:text-white transition-all duration-300 disabled:cursor-not-allowed disabled:bg-[#EDE1D2] disabled:text-[#8A8F88]"
       >
         <ShoppingCart className="w-4 h-4" />
-        Add to Cart
+        {purchasable ? "Add to Cart" : "Price unavailable"}
       </button>
     </div>
   );

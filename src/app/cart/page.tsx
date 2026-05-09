@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
-import { useCartStore } from "@/store/useCartStore";
+import { getCartItemId, getCartItemPrice, useCartStore } from "@/store/useCartStore";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore();
@@ -41,33 +41,38 @@ export default function CartPage() {
           {/* Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <motion.div key={item.product.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              <motion.div key={getCartItemId(item.product, item.variant)} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex gap-5 p-5 bg-white rounded-2xl shadow-ambient-sm"
               >
                 <Link href={`/product/${item.product.id}`} className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-[#F2E6D7] flex-shrink-0">
-                  <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                  <img src={item.product.image} alt={item.product.name} className="w-full h-full object-contain p-1.5" />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs text-[#56615B]">{item.product.category}</p>
                       <Link href={`/product/${item.product.id}`} className="font-serif text-base sm:text-lg text-[#201B12] hover:text-[#1F5D3B] transition-colors">{item.product.name}</Link>
+                      {item.variant && (
+                        <p className="text-xs text-[#56615B] mt-1">
+                          {item.variant.quantity} - {item.variant.priceLabel}
+                        </p>
+                      )}
                     </div>
-                    <button onClick={() => removeItem(item.product.id)} className="p-2 rounded-lg hover:bg-red-50 text-[#56615B] hover:text-red-500 transition-colors flex-shrink-0">
+                    <button onClick={() => removeItem(getCartItemId(item.product, item.variant))} className="p-2 rounded-lg hover:bg-red-50 text-[#56615B] hover:text-red-500 transition-colors flex-shrink-0">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-0 bg-[#F2E6D7] rounded-lg overflow-hidden">
-                      <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-[#EDE1D2]">
+                      <button onClick={() => updateQuantity(getCartItemId(item.product, item.variant), item.quantity - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-[#EDE1D2]">
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                       <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-[#EDE1D2]">
+                      <button onClick={() => updateQuantity(getCartItemId(item.product, item.variant), item.quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-[#EDE1D2]">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <span className="text-lg font-bold text-[#1F5D3B]">₹{item.product.price * item.quantity}</span>
+                    <span className="text-lg font-bold text-[#1F5D3B]">₹{getCartItemPrice(item) * item.quantity}</span>
                   </div>
                 </div>
               </motion.div>

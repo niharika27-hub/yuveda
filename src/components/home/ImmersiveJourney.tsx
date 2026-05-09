@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
+import { getProductPriceLabel } from "@/lib/products-live";
 
 const storyChapters = [
   {
@@ -486,7 +487,7 @@ export function ImmersiveJourney() {
                       </p>
                     </div>
                     <p className="shrink-0 text-lg font-semibold text-[#1f6f43]">
-                      Rs. {product.price}
+                      {getProductPriceLabel(product)}
                     </p>
                   </div>
                   <Link

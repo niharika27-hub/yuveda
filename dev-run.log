@@ -1,0 +1,26 @@
+
+> aayur@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.58.1:3000
+- Environments: .env.local
+✓ Ready in 1395ms
+Creating turbopack project { dir: 'E:\\yuveda', testMode: true }
+
+ GET /shop/ 200 in 1848ms (next.js: 1112ms, application-code: 736ms)
+ GET /shop/ 200 in 226ms (next.js: 13ms, application-code: 213ms)
+ GET /shop/ 200 in 36ms (next.js: 12ms, application-code: 24ms)
+ GET /shop/ 200 in 58ms (next.js: 9ms, application-code: 49ms)
+ GET /product/ayurpure/ 200 in 1329ms (next.js: 1269ms, generate-params: 1192ms, application-code: 60ms)
+ GET /product/active-energy-syrup/ 200 in 75ms (next.js: 21ms, generate-params: 14ms, application-code: 54ms)
+ GET /shop/ 200 in 61ms (next.js: 8ms, application-code: 52ms)
+ GET /category/syrups/ 200 in 1404ms (next.js: 1336ms, generate-params: 1261ms, application-code: 68ms)
+✓ Compiled in 231ms
+✓ Compiled in 146ms
+✓ Compiled in 111ms
+✓ Compiled in 155ms
+✓ Compiled in 144ms
+ GET /shop/ 200 in 892ms (next.js: 278ms, application-code: 614ms)
+[?25h
