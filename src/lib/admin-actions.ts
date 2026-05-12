@@ -33,6 +33,8 @@ export type ConsultationRequest = {
   id: string;
   user_id: string | null;
   full_name: string;
+  phone: string | null;
+  email: string | null;
   age: number | null;
   gender: string | null;
   health_concern: string | null;

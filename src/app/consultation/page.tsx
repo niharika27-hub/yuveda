@@ -22,13 +22,15 @@ export default function ConsultationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-        full_name: String(form.get("full_name") ?? ""),
-        age: Number(form.get("age") ?? 0),
-        gender: String(form.get("gender") ?? ""),
-        health_concern: String(form.get("health_concern") ?? ""),
-        condition_details: String(form.get("condition_details") ?? ""),
-        preferred_date: String(form.get("preferred_date") ?? ""),
-        preferred_time: String(form.get("preferred_time") ?? ""),
+          full_name: String(form.get("full_name") ?? ""),
+          phone: String(form.get("phone") ?? ""),
+          email: String(form.get("email") ?? ""),
+          age: Number(form.get("age") ?? 0),
+          gender: String(form.get("gender") ?? ""),
+          health_concern: String(form.get("health_concern") ?? ""),
+          condition_details: String(form.get("condition_details") ?? ""),
+          preferred_date: String(form.get("preferred_date") ?? ""),
+          preferred_time: String(form.get("preferred_time") ?? ""),
         }),
       });
       const result = (await response.json()) as { error?: string };
@@ -93,6 +95,14 @@ export default function ConsultationPage() {
                   <div>
                     <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Full Name</label>
                     <input required name="full_name" placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Phone Number</label>
+                    <input required name="phone" type="tel" placeholder="Enter phone number" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Email</label>
+                    <input required name="email" type="email" placeholder="Enter email address" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Age</label>

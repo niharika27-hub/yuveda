@@ -8,6 +8,8 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
     const body = (await request.json()) as {
       full_name?: string;
+      phone?: string;
+      email?: string;
       age?: number;
       gender?: string;
       health_concern?: string;
@@ -16,13 +18,23 @@ export async function POST(request: Request) {
       preferred_time?: string;
     };
 
-    if (!body.full_name?.trim() || !body.condition_details?.trim()) {
-      return Response.json({ error: "Name and condition details are required." }, { status: 400 });
+    if (
+      !body.full_name?.trim() ||
+      !body.phone?.trim() ||
+      !body.email?.trim() ||
+      !body.condition_details?.trim()
+    ) {
+      return Response.json(
+        { error: "Name, phone, email, and condition details are required." },
+        { status: 400 }
+      );
     }
 
     const { error } = await supabase.from("consultation_requests").insert({
       user_id: user?.id ?? null,
       full_name: body.full_name.trim(),
+      phone: body.phone.trim(),
+      email: body.email.trim(),
       age: body.age ?? null,
       gender: body.gender ?? null,
       health_concern: body.health_concern ?? null,

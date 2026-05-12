@@ -5,6 +5,8 @@ import {
   CalendarCheck,
   CreditCard,
   Package,
+  Mail,
+  Phone,
   Plus,
   RefreshCw,
   Save,
@@ -575,6 +577,36 @@ export function AdminPanel() {
                   <p className="text-sm text-[#657367]">
                     {item.health_concern} | {item.preferred_date} | {item.preferred_time}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {item.phone ? (
+                      <a
+                        href={`tel:${item.phone}`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#d6cfbf] bg-[#fbfaf5] px-3 py-1.5 text-sm font-medium text-[#183628] hover:bg-[#f1eadb]"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {item.phone}
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 rounded-lg border border-[#eadfd0] bg-[#fbfaf5] px-3 py-1.5 text-sm text-[#8a7560]">
+                        <Phone className="h-4 w-4" />
+                        No phone
+                      </span>
+                    )}
+                    {item.email ? (
+                      <a
+                        href={`mailto:${item.email}`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#d6cfbf] bg-[#fbfaf5] px-3 py-1.5 text-sm font-medium text-[#183628] hover:bg-[#f1eadb]"
+                      >
+                        <Mail className="h-4 w-4" />
+                        {item.email}
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 rounded-lg border border-[#eadfd0] bg-[#fbfaf5] px-3 py-1.5 text-sm text-[#8a7560]">
+                        <Mail className="h-4 w-4" />
+                        No email
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-2 text-sm text-[#4c604f]">{item.condition_details}</p>
                 </div>
                 <StatusSelect
