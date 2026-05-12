@@ -5,12 +5,85 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { CreditCard, Smartphone, Truck, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getCartItemId, getCartItemPrice, useCartStore } from "@/store/useCartStore";
+import { createOrder } from "@/lib/admin-data";
 
 export default function CheckoutPage() {
   const { items, getTotal, clearCart } = useCartStore();
   const [step, setStep] = useState<"form" | "success">("form");
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [orderId, setOrderId] = useState<string>("");
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [customer, setCustomer] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    pinCode: "",
+  });
+
+  const updateCustomer = (key: keyof typeof customer, value: string) => {
+    setCustomer((current) => ({ ...current, [key]: value }));
+  };
+
+  const placeOrder = async () => {
+    if (items.length === 0) {
+      setErrorMessage("Your cart is empty.");
+      return;
+    }
+
+    if (
+      !customer.name ||
+      !customer.phone ||
+      !customer.email ||
+      !customer.address ||
+      !customer.city ||
+      !customer.pinCode
+    ) {
+      setErrorMessage("Please fill all delivery details.");
+      return;
+    }
+
+    setPlacingOrder(true);
+    setErrorMessage("");
+    const nextOrderId = Math.floor(100000 + Math.random() * 900000).toString();
+    const subtotal = getTotal();
+    const tax = Math.round(subtotal * 0.18);
+    const total = subtotal + tax;
+
+    try {
+      await createOrder({
+        order_number: `YUV-${nextOrderId}`,
+        customer_name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address,
+        city: customer.city,
+        pin_code: customer.pinCode,
+        payment_method: paymentMethod,
+        subtotal,
+        tax,
+        total,
+        items: items.map((item) => ({
+          product_id: item.product.id,
+          name: item.product.name,
+          quantity: item.quantity,
+          variant: item.variant?.quantity ?? "Standard pack",
+          price: getCartItemPrice(item),
+        })),
+      });
+      setOrderId(nextOrderId);
+      setStep("success");
+      clearCart();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Could not place order."
+      );
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
 
   if (step === "success") {
     return (
@@ -45,12 +118,12 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-2xl shadow-ambient-sm p-6">
               <h2 className="font-serif text-xl text-[#201B12] mb-5">Delivery Address</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input placeholder="Full Name" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
-                <input placeholder="Phone Number" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
-                <input placeholder="Email" className="sm:col-span-2 px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
-                <textarea placeholder="Full Address" rows={3} className="sm:col-span-2 px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all resize-none" />
-                <input placeholder="City" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
-                <input placeholder="PIN Code" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <input value={customer.name} onChange={(e) => updateCustomer("name", e.target.value)} placeholder="Full Name" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <input value={customer.phone} onChange={(e) => updateCustomer("phone", e.target.value)} placeholder="Phone Number" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <input value={customer.email} onChange={(e) => updateCustomer("email", e.target.value)} placeholder="Email" className="sm:col-span-2 px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <textarea value={customer.address} onChange={(e) => updateCustomer("address", e.target.value)} placeholder="Full Address" rows={3} className="sm:col-span-2 px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all resize-none" />
+                <input value={customer.city} onChange={(e) => updateCustomer("city", e.target.value)} placeholder="City" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                <input value={customer.pinCode} onChange={(e) => updateCustomer("pinCode", e.target.value)} placeholder="PIN Code" className="px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
               </div>
             </div>
 
@@ -108,7 +181,15 @@ export default function CheckoutPage() {
               <div className="border-t border-[#EDE1D2] mt-4 pt-4">
                 <div className="flex justify-between text-lg font-bold"><span>Total</span><span className="text-[#1F5D3B]">₹{Math.round(getTotal() * 1.18)}</span></div>
               </div>
-              <button onClick={() => {
+              {errorMessage && (
+                <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {errorMessage}
+                </p>
+              )}
+              <button disabled={placingOrder} onClick={placeOrder} className="block w-full mt-6 py-4 rounded-full btn-gradient text-white text-center font-medium hover:shadow-lg hover:shadow-[#1F5D3B]/30 transition-all disabled:opacity-60">
+                {placingOrder ? "Placing Order..." : `Place Order - Rs. ${Math.round(getTotal() * 1.18)}`}
+              </button>
+              <button hidden type="button" onClick={() => {
                 setOrderId(Math.floor(100000 + Math.random() * 900000).toString());
                 setStep("success");
                 clearCart();

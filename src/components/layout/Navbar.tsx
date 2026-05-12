@@ -12,11 +12,14 @@ import {
   Menu,
   X,
   ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { getProductPriceLabel, searchProductsInList } from "@/lib/products-live";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
+import { supabase } from "@/lib/supabase/client";
+import { isAdminEmail } from "@/lib/admin";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -45,6 +48,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [logoSrc, setLogoSrc] = useState("/journey/yuveda-logo.png");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [showAdminLink, setShowAdminLink] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const cartCount = useCartStore((s) => s.getItemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
@@ -61,6 +65,32 @@ export function Navbar() {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const syncAdmin = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (mounted) {
+        setShowAdminLink(isAdminEmail(user?.email));
+      }
+    };
+
+    void syncAdmin();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setShowAdminLink(isAdminEmail(session?.user.email));
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -143,6 +173,15 @@ export function Navbar() {
                   </AnimatePresence>
                 </div>
               ))}
+              {showAdminLink && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-1 rounded-full bg-[#1F5D3B] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#004526]"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Admin
+                </Link>
+              )}
             </div>
 
             {/* Right Section */}
@@ -301,6 +340,16 @@ export function Navbar() {
                   )}
                 </div>
               ))}
+              {showAdminLink && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-xl bg-[#1F5D3B] px-4 py-3.5 text-lg font-medium text-white"
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                  Admin
+                </Link>
+              )}
             </div>
             <div className="mt-8 flex gap-4">
               <Link

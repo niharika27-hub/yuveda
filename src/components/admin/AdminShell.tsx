@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, LogOut, Package, ShieldCheck } from "lucide-react";
+import {
+  CalendarCheck,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  ShieldCheck,
+  ShoppingBag,
+} from "lucide-react";
 import { isCurrentUserAdmin } from "@/lib/admin";
 import { supabase } from "@/lib/supabase/client";
 
@@ -65,10 +73,22 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <LayoutDashboard className="h-4 w-4" />
             Dashboard
           </Link>
-          <Link href="/admin/products" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
+          <a href="/admin#products" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
             <Package className="h-4 w-4" />
             Products
-          </Link>
+          </a>
+          <a href="/admin#consultations" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
+            <CalendarCheck className="h-4 w-4" />
+            Consultations
+          </a>
+          <a href="/admin#orders" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
+            <ShoppingBag className="h-4 w-4" />
+            Orders
+          </a>
+          <a href="/admin#payments" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
+            <CreditCard className="h-4 w-4" />
+            Payments
+          </a>
         </nav>
       </aside>
 

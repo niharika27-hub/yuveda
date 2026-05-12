@@ -339,7 +339,7 @@ export default function ShopPage() {
   }, [products, selectedCategories, selectedConcerns, priceRange, sortBy]);
 
   return (
-    <div className="pt-24 pb-16">
+    <div className="pt-24 pb-16 bg-[#F7F0E6]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10">

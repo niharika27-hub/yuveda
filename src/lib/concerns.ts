@@ -32,7 +32,7 @@ export const concerns: Concern[] = [
     slug: "digestive-care",
     description: "Ayurveda considers digestion (Agni) as the cornerstone of health. Support your digestive fire with natural herbs that promote healthy gut function and regularity.",
     icon: "Flame",
-    image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop",
+    image: "/productimages/Yakirattan.jpeg",
     tips: [
       "Eat meals at regular times every day",
       "Chew food thoroughly — at least 32 times",

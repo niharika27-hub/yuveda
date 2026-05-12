@@ -52,27 +52,30 @@ export function CategoryPageClient({ slug }: { slug: string }) {
   return (
     <div className="pt-24 pb-16">
       {/* Banner */}
-      <div className="relative h-64 sm:h-80 overflow-hidden">
-        <img src="/journey/seed-to-herb.webp" alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
-            <div className="flex items-center gap-2 text-sm text-white/60 mb-3">
-              <Link href="/" className="hover:text-white">Home</Link>
-              <span>/</span>
-              <Link href="/shop" className="hover:text-white">Shop</Link>
-              <span>/</span>
-              <span className="text-white">{category.name}</span>
-            </div>
-            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="font-serif text-4xl sm:text-5xl text-white mb-3">
-              {category.name}
-            </motion.h1>
-            <p className="text-white/70 max-w-lg">{category.description}</p>
+      <div className="relative h-56 sm:h-64 bg-[#F7F0E6] flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="flex items-center gap-2 text-sm text-[#56615B] mb-3">
+            <Link href="/" className="hover:text-[#1F5D3B]">Home</Link>
+            <span>/</span>
+            <Link href="/shop" className="hover:text-[#1F5D3B]">Shop</Link>
+            <span>/</span>
+            <span className="text-[#201B12]">{category.name}</span>
           </div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="font-serif text-4xl sm:text-5xl text-[#201B12] mb-3"
+          >
+            {category.name}
+          </motion.h1>
+          <p className="text-[#56615B] max-w-lg">{category.description}</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <p className="text-[#56615B] mb-8">{categoryProducts.length} products</p>
+        <p className="text-[#201B12] text-base font-semibold mb-8">
+          {categoryProducts.length} products
+        </p>
         {loading && <p className="text-sm text-[#56615B] mb-3">Loading live products...</p>}
         {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">

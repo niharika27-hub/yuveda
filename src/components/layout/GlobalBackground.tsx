@@ -11,7 +11,7 @@ export function GlobalBackground() {
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
     >
       <motion.div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[4px]"
         style={{
           backgroundImage: `url(${siteBackgroundImage})`,
           opacity: 1,

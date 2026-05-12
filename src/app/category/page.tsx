@@ -26,21 +26,18 @@ export default function CategoriesIndexPage() {
             return (
               <motion.div key={cat.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                 <Link href={`/category/${cat.slug}`} className="group block overflow-hidden rounded-2xl shadow-ambient-sm hover:shadow-ambient transition-all duration-500 hover:-translate-y-1">
-                  <div className="relative h-44 overflow-hidden">
-                    <img src="/journey/seed-to-herb.webp" alt="" className="w-full h-full object-cover" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-black/35 flex items-center justify-center">
-                          <Icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <h2 className="font-serif text-lg text-white font-medium" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
-                            {cat.name}
-                          </h2>
-                          <p className="text-white/80 text-xs" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.65)" }}>
-                            {cat.productCount} Products
-                          </p>
-                        </div>
+                  <div className="flex h-32 items-center justify-between gap-4 bg-white px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[#E8F3EC] flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#1F5D3B]" />
+                      </div>
+                      <div>
+                        <h2 className="font-serif text-lg text-[#201B12] font-medium">
+                          {cat.name}
+                        </h2>
+                        <p className="text-[#56615B] text-xs">
+                          {cat.productCount} Products
+                        </p>
                       </div>
                     </div>
                   </div>

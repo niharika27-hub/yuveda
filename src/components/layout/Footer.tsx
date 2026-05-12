@@ -75,15 +75,15 @@ export function Footer() {
             <div className="space-y-3 text-sm text-white/60">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#C9A961]" />
-                <span>+91 98765 43210</span>
+                <span>+91 98143 35533</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#C9A961]" />
-                <span>hello@yuveda.in</span>
+                <span>yuvedalife2008@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#C9A961]" />
-                <span>Rishikesh, Uttarakhand, India</span>
+                <span>Garah City Colony, Opp. Radha Swami Satsang Ghar, Nawanshahar Road, Phillaur 144410, Punjab</span>
               </div>
             </div>
           </div>

@@ -1,12 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calendar, Clock, CheckCircle2, Stethoscope, Leaf } from "lucide-react";
+import { createConsultationRequest } from "@/lib/admin-data";
 
 export default function ConsultationPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const submitConsultation = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setErrorMessage("");
+
+    const form = new FormData(event.currentTarget);
+
+    try {
+      await createConsultationRequest({
+        full_name: String(form.get("full_name") ?? ""),
+        age: Number(form.get("age") ?? 0),
+        gender: String(form.get("gender") ?? ""),
+        health_concern: String(form.get("health_concern") ?? ""),
+        condition_details: String(form.get("condition_details") ?? ""),
+        preferred_date: String(form.get("preferred_date") ?? ""),
+        preferred_time: String(form.get("preferred_time") ?? ""),
+      });
+      setSubmitted(true);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not book consultation. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -49,21 +81,21 @@ export default function ConsultationPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-3">
             <div className="bg-white rounded-2xl shadow-ambient p-8">
               <h2 className="font-serif text-2xl text-[#201B12] mb-6">Get Personalized Ayurvedic Plan</h2>
-              <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-5">
+              <form onSubmit={submitConsultation} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Full Name</label>
-                    <input required placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                    <input required name="full_name" placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Age</label>
-                    <input required type="number" placeholder="Your age" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                    <input required name="age" type="number" placeholder="Your age" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
                   </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Gender</label>
-                  <select required className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all appearance-none">
+                  <select required name="gender" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all appearance-none">
                     <option value="">Select gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -73,7 +105,7 @@ export default function ConsultationPage() {
 
                 <div>
                   <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Health Concern</label>
-                  <select required className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all appearance-none">
+                  <select required name="health_concern" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all appearance-none">
                     <option value="">Select concern</option>
                     <option value="immunity">Immunity Booster</option>
                     <option value="digestive">Digestive Care</option>
@@ -87,7 +119,7 @@ export default function ConsultationPage() {
 
                 <div>
                   <label className="text-sm font-medium text-[#201B12] mb-1.5 block">Describe Your Condition</label>
-                  <textarea required placeholder="Tell us about your health concerns, symptoms, lifestyle..." rows={4} className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all resize-none" />
+                  <textarea required name="condition_details" placeholder="Tell us about your health concerns, symptoms, lifestyle..." rows={4} className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all resize-none" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -95,13 +127,13 @@ export default function ConsultationPage() {
                     <label className="text-sm font-medium text-[#201B12] mb-1.5 block">
                       <Calendar className="w-4 h-4 inline mr-1" />Preferred Date
                     </label>
-                    <input required type="date" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
+                    <input required name="preferred_date" type="date" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all" />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-[#201B12] mb-1.5 block">
                       <Clock className="w-4 h-4 inline mr-1" />Preferred Time
                     </label>
-                    <select required className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all appearance-none">
+                    <select required name="preferred_time" className="w-full px-4 py-3 rounded-xl bg-[#F2E6D7] text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1F5D3B]/20 transition-all appearance-none">
                       <option value="">Select time</option>
                       <option>9:00 AM - 10:00 AM</option>
                       <option>10:00 AM - 11:00 AM</option>
@@ -113,8 +145,14 @@ export default function ConsultationPage() {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-4 rounded-full btn-gradient text-white font-medium text-base hover:shadow-lg hover:shadow-[#1F5D3B]/30 transition-all">
-                  Book Consultation
+                {errorMessage && (
+                  <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {errorMessage}
+                  </p>
+                )}
+
+                <button disabled={submitting} type="submit" className="w-full py-4 rounded-full btn-gradient text-white font-medium text-base hover:shadow-lg hover:shadow-[#1F5D3B]/30 transition-all disabled:opacity-60">
+                  {submitting ? "Booking..." : "Book Consultation"}
                 </button>
               </form>
             </div>
@@ -122,22 +160,6 @@ export default function ConsultationPage() {
 
           {/* Sidebar */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2 space-y-6">
-            {/* Packages */}
-            {[
-              { title: "Initial Discovery", price: "₹499", duration: "30 min", desc: "First-time consultation to understand your Prakriti and health concerns." },
-              { title: "Comprehensive Wellness", price: "₹999", duration: "60 min", desc: "Detailed health assessment with personalized Ayurvedic treatment plan." },
-              { title: "Follow-up Alignment", price: "₹299", duration: "20 min", desc: "Progress review and treatment plan adjustments." },
-            ].map((pkg) => (
-              <div key={pkg.title} className="bg-white rounded-2xl shadow-ambient-sm p-6 hover:shadow-ambient transition-all duration-300">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-serif text-lg text-[#201B12]">{pkg.title}</h3>
-                  <span className="text-lg font-bold text-[#C9A961]">{pkg.price}</span>
-                </div>
-                <p className="text-xs text-[#1F5D3B] font-medium mb-2">{pkg.duration} session</p>
-                <p className="text-sm text-[#56615B]">{pkg.desc}</p>
-              </div>
-            ))}
-
             {/* Trust */}
             <div className="bg-[#E8F3EC] rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-3">

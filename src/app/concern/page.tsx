@@ -26,8 +26,8 @@ export default function ConcernsIndexPage() {
             return (
               <motion.div key={concern.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Link href={`/concern/${concern.slug}`} className="group block overflow-hidden rounded-2xl shadow-ambient-sm hover:shadow-ambient transition-all duration-500 hover:-translate-y-1">
-                  <div className="relative h-48 overflow-hidden">
-                    <img src="/journey/seed-to-herb.webp" alt="" className="w-full h-full object-cover" />
+                  <div className="relative h-48 overflow-hidden bg-[#F7F0E6]">
+                    <img src={concern.image} alt={concern.name} className="w-full h-full object-contain" />
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-black/35 flex items-center justify-center">
