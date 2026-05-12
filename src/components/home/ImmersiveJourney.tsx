@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
+import { useProductReviews } from "@/hooks/useProductReviews";
 import { getProductPriceLabel } from "@/lib/products-live";
 
 const storyChapters = [
@@ -124,7 +125,16 @@ const ingredientMarquee = [...ingredientSpotlight, ...ingredientSpotlight];
 
 export function ImmersiveJourney() {
   const { products } = useRealtimeProducts();
+  const { reviews: latestReviews } = useProductReviews(undefined, 6);
   const pageRef = useRef<HTMLDivElement>(null);
+  const testimonialItems =
+    latestReviews.length > 0
+      ? latestReviews.slice(0, 3).map((review) => ({
+          text: review.comment,
+          name: `${review.reviewer_name} on ${review.product_name}`,
+          rating: review.rating,
+        }))
+      : quotes.map((quote) => ({ ...quote, rating: 5 }));
 
   useEffect(() => {
     let lenis: Lenis | null = null;
@@ -610,14 +620,14 @@ export function ImmersiveJourney() {
           </h2>
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {quotes.map((quote) => (
+            {testimonialItems.map((quote) => (
               <article
                 key={quote.name}
                 className="js-fade-on-scroll rounded-[1.3rem] border border-[#1f6f43]/15 bg-[#fff8e8]/92 p-7 shadow-[0_18px_50px_rgba(61,43,19,0.16)]"
               >
                 <div className="mb-5 flex items-center gap-1 text-[#e08b1d]">
                   {[0, 1, 2, 3, 4].map((star) => (
-                    <Star key={star} className="h-4 w-4 fill-current" />
+                    <Star key={star} className={`h-4 w-4 ${star < quote.rating ? "fill-current" : "text-[#e7d7b6]"}`} />
                   ))}
                 </div>
                 <p className="text-lg leading-relaxed text-[#3e4f41]">

@@ -3,14 +3,57 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CreditCard, Smartphone, Truck, CheckCircle2, ArrowLeft } from "lucide-react";
+import { CreditCard, Truck, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getCartItemId, getCartItemPrice, useCartStore } from "@/store/useCartStore";
-import { createOrder } from "@/lib/admin-data";
+
+type RazorpayCheckoutResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  theme: { color: string };
+  handler: (response: RazorpayCheckoutResponse) => void;
+  modal: { ondismiss: () => void };
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => { open: () => void };
+  }
+}
+
+function loadRazorpayScript() {
+  return new Promise<boolean>((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 export default function CheckoutPage() {
   const { items, getTotal, clearCart } = useCartStore();
   const [step, setStep] = useState<"form" | "success">("form");
-  const [paymentMethod, setPaymentMethod] = useState("upi");
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [orderId, setOrderId] = useState<string>("");
   const [placingOrder, setPlacingOrder] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -53,15 +96,9 @@ export default function CheckoutPage() {
     const total = subtotal + tax;
 
     try {
-      await createOrder({
-        order_number: `YUV-${nextOrderId}`,
-        customer_name: customer.name,
-        phone: customer.phone,
-        email: customer.email,
-        address: customer.address,
-        city: customer.city,
-        pin_code: customer.pinCode,
-        payment_method: paymentMethod,
+      const payload = {
+        customer,
+        paymentMethod,
         subtotal,
         tax,
         total,
@@ -72,15 +109,82 @@ export default function CheckoutPage() {
           variant: item.variant?.quantity ?? "Standard pack",
           price: getCartItemPrice(item),
         })),
+      };
+
+      const response = await fetch("/api/checkout/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      setOrderId(nextOrderId);
-      setStep("success");
-      clearCart();
+      const result = (await response.json()) as {
+        error?: string;
+        mode?: "cod" | "razorpay";
+        keyId?: string;
+        orderNumber?: string;
+        razorpayOrderId?: string;
+        amount?: number;
+        currency?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "Could not place order.");
+      }
+
+      if (result.mode === "cod") {
+        setOrderId(result.orderNumber?.replace("YUV-", "") ?? nextOrderId);
+        setStep("success");
+        clearCart();
+        return;
+      }
+
+      const loaded = await loadRazorpayScript();
+      if (!loaded || !window.Razorpay || !result.keyId || !result.razorpayOrderId) {
+        throw new Error("Razorpay checkout could not be loaded.");
+      }
+
+      const razorpay = new window.Razorpay({
+        key: result.keyId,
+        amount: result.amount ?? total * 100,
+        currency: result.currency ?? "INR",
+        name: "Yuveda",
+        description: "Yuveda wellness order",
+        order_id: result.razorpayOrderId,
+        prefill: {
+          name: customer.name,
+          email: customer.email,
+          contact: customer.phone,
+        },
+        theme: { color: "#1F5D3B" },
+        handler: async (paymentResponse) => {
+          const verifyResponse = await fetch("/api/checkout/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(paymentResponse),
+          });
+          const verifyResult = (await verifyResponse.json()) as {
+            error?: string;
+            orderNumber?: string;
+          };
+          if (!verifyResponse.ok) {
+            setErrorMessage(verifyResult.error ?? "Payment verification failed.");
+            setPlacingOrder(false);
+            return;
+          }
+          setOrderId(verifyResult.orderNumber?.replace("YUV-", "") ?? nextOrderId);
+          setStep("success");
+          clearCart();
+        },
+        modal: {
+          ondismiss: () => {
+            setPlacingOrder(false);
+          },
+        },
+      });
+      razorpay.open();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Could not place order."
       );
-    } finally {
       setPlacingOrder(false);
     }
   };
@@ -132,8 +236,7 @@ export default function CheckoutPage() {
               <h2 className="font-serif text-xl text-[#201B12] mb-5">Payment Method</h2>
               <div className="space-y-3">
                 {[
-                  { id: "upi", label: "UPI Payment", icon: Smartphone, desc: "Google Pay, PhonePe, Paytm" },
-                  { id: "card", label: "Credit/Debit Card", icon: CreditCard, desc: "Visa, Mastercard, RuPay" },
+                  { id: "razorpay", label: "Secure Online Payment", icon: CreditCard, desc: "UPI, cards, net banking via Razorpay" },
                   { id: "cod", label: "Cash on Delivery", icon: Truck, desc: "Pay when delivered" },
                 ].map((method) => (
                   <label key={method.id} className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all ${paymentMethod === method.id ? "bg-[#E8F3EC] ring-2 ring-[#1F5D3B]" : "bg-[#FEF2E3] hover:bg-[#F2E6D7]"}`}>

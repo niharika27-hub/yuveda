@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import {
   Calendar,
   CheckCircle2,
-  ChevronRight,
   Loader2,
   LogOut,
   MapPin,
@@ -14,6 +13,7 @@ import {
   Plus,
   Save,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -24,11 +24,55 @@ type ProfileForm = {
   phone: string;
 };
 
-const orders = [
-  { id: "YUV-284719", date: "March 18, 2026", status: "Delivered", total: 1247, items: 3 },
-  { id: "YUV-183562", date: "March 5, 2026", status: "Shipped", total: 849, items: 2 },
-  { id: "YUV-092841", date: "Feb 22, 2026", status: "Delivered", total: 599, items: 1 },
-];
+type AddressForm = {
+  recipient_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  pin_code: string;
+  is_default: boolean;
+};
+
+type Address = AddressForm & {
+  id: string;
+};
+
+type ProfileOrder = {
+  id: string;
+  order_number: string;
+  order_status: string;
+  payment_status: string;
+  total: number;
+  items: unknown[];
+  created_at: string;
+};
+
+type Consultation = {
+  id: string;
+  health_concern: string | null;
+  preferred_date: string | null;
+  preferred_time: string | null;
+  status: string;
+  created_at: string;
+};
+
+type ProfileResponse = {
+  user: { id: string; email: string | null };
+  profile: { full_name: string | null; phone: string | null } | null;
+  addresses: Address[];
+  orders: ProfileOrder[];
+  consultations: Consultation[];
+  error?: string;
+};
+
+const emptyAddress: AddressForm = {
+  recipient_name: "",
+  phone: "",
+  address: "",
+  city: "",
+  pin_code: "",
+  is_default: true,
+};
 
 const tabs: Array<{ id: ProfileTab; label: string; icon: typeof Package }> = [
   { id: "orders", label: "Orders", icon: Package },
@@ -43,55 +87,47 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [email, setEmail] = useState("-");
-  const [userId, setUserId] = useState<string | null>(null);
   const [form, setForm] = useState<ProfileForm>({ fullName: "Guest User", phone: "" });
+  const [addressForm, setAddressForm] = useState<AddressForm>(emptyAddress);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [orders, setOrders] = useState<ProfileOrder[]>([]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      setLoading(true);
-      setErrorMessage(null);
+  const loadProfile = async () => {
+    setLoading(true);
+    setErrorMessage(null);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    const response = await fetch("/api/profile", { cache: "no-store" });
+    const data = (await response.json()) as ProfileResponse;
 
-      if (userError || !user) {
-        router.replace("/login");
-        return;
-      }
+    if (response.status === 401) {
+      router.replace("/login");
+      return;
+    }
 
-      setUserId(user.id);
-      setEmail(user.email ?? "-");
-
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("full_name, phone")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        setErrorMessage(profileError.message);
-      }
-
-      setForm({
-        fullName:
-          profileData?.full_name ||
-          (typeof user.user_metadata?.full_name === "string"
-            ? user.user_metadata.full_name
-            : "Guest User"),
-        phone:
-          profileData?.phone ||
-          (typeof user.user_metadata?.phone === "string" ? user.user_metadata.phone : ""),
-      });
-
+    if (!response.ok) {
+      setErrorMessage(data.error ?? "Could not load profile.");
       setLoading(false);
-    };
+      return;
+    }
 
+    setEmail(data.user.email ?? "-");
+    setForm({
+      fullName: data.profile?.full_name || "Guest User",
+      phone: data.profile?.phone || "",
+    });
+    setAddresses(data.addresses ?? []);
+    setOrders(data.orders ?? []);
+    setConsultations(data.consultations ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
     void loadProfile();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const initial = useMemo(
     () => form.fullName.trim().charAt(0).toUpperCase() || "U",
@@ -106,24 +142,66 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!userId) return;
-
     setSaving(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const { error } = await supabase.from("profiles").upsert({
-      id: userId,
-      full_name: form.fullName.trim() || null,
-      phone: form.phone.trim() || null,
+    const response = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: form.fullName,
+        phone: form.phone,
+      }),
     });
+    const result = (await response.json()) as { error?: string };
 
-    if (error) {
-      setErrorMessage(error.message);
+    if (!response.ok) {
+      setErrorMessage(result.error ?? "Could not update profile.");
     } else {
       setSuccessMessage("Profile updated.");
+      await loadProfile();
     }
 
+    setSaving(false);
+  };
+
+  const handleAddAddress = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const response = await fetch("/api/profile/addresses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(addressForm),
+    });
+    const result = (await response.json()) as { error?: string };
+
+    if (!response.ok) {
+      setErrorMessage(result.error ?? "Could not save address.");
+    } else {
+      setSuccessMessage("Address saved.");
+      setAddressForm(emptyAddress);
+      await loadProfile();
+    }
+
+    setSaving(false);
+  };
+
+  const deleteAddress = async (id: string) => {
+    setSaving(true);
+    const response = await fetch(`/api/profile/addresses?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const result = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setErrorMessage(result.error ?? "Could not delete address.");
+    } else {
+      setSuccessMessage("Address deleted.");
+      await loadProfile();
+    }
     setSaving(false);
   };
 
@@ -198,71 +276,91 @@ export default function ProfilePage() {
 
           <section className="space-y-6">
             {activeTab === "orders" && (
-              <AccountPanel title="Order History" description="Track recent orders and delivery status.">
+              <AccountPanel title="Order History" description="Track orders and payment status.">
                 <div className="space-y-3">
                   {orders.map((order) => (
-                    <button
-                      key={order.id}
-                      className="flex w-full items-center justify-between gap-4 rounded-2xl bg-[#FEF2E3] p-4 text-left transition-colors hover:bg-[#F2E6D7]"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-[#201B12]">#{order.id}</p>
-                        <p className="mt-1 text-sm text-[#56615B]">
-                          {order.date} - {order.items} items
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-3">
-                        <div className="text-right">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                              order.status === "Delivered"
-                                ? "bg-[#E8F3EC] text-[#1F5D3B]"
-                                : "bg-[#C9A961]/20 text-[#8A6A18]"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                          <p className="mt-1 text-sm font-bold text-[#201B12]">Rs. {order.total}</p>
+                    <div key={order.id} className="rounded-2xl bg-[#FEF2E3] p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-base font-semibold text-[#201B12]">
+                            #{order.order_number}
+                          </p>
+                          <p className="mt-1 text-sm text-[#56615B]">
+                            {new Date(order.created_at).toLocaleDateString()} -{" "}
+                            {Array.isArray(order.items) ? order.items.length : 0} items
+                          </p>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-[#56615B]" />
+                        <div className="text-left sm:text-right">
+                          <p className="text-sm font-bold text-[#201B12]">Rs. {order.total}</p>
+                          <p className="mt-1 text-xs text-[#56615B]">
+                            {order.order_status} | {order.payment_status}
+                          </p>
+                        </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
+                  {orders.length === 0 && <EmptyState text="No orders yet." />}
                 </div>
               </AccountPanel>
             )}
 
             {activeTab === "addresses" && (
-              <AccountPanel title="Saved Addresses" description="Manage delivery addresses for faster checkout.">
+              <AccountPanel title="Saved Addresses" description="Manage delivery addresses for checkout.">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl bg-[#FEF2E3] p-5">
-                    <div className="mb-4 flex items-center justify-between">
-                      <span className="rounded-full bg-[#E8F3EC] px-3 py-1 text-xs font-medium text-[#1F5D3B]">
-                        Default
-                      </span>
-                      <button className="text-sm font-medium text-[#C9A961]">Edit</button>
+                  {addresses.map((address) => (
+                    <div key={address.id} className="rounded-2xl bg-[#FEF2E3] p-5">
+                      <div className="mb-4 flex items-center justify-between">
+                        {address.is_default && (
+                          <span className="rounded-full bg-[#E8F3EC] px-3 py-1 text-xs font-medium text-[#1F5D3B]">
+                            Default
+                          </span>
+                        )}
+                        <button
+                          onClick={() => void deleteAddress(address.id)}
+                          className="ml-auto text-red-600"
+                          aria-label="Delete address"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <p className="font-medium text-[#201B12]">{address.recipient_name}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#56615B]">
+                        {address.address}, {address.city} - {address.pin_code}
+                      </p>
                     </div>
-                    <p className="font-medium text-[#201B12]">{form.fullName}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#56615B]">
-                      Add your preferred delivery address during checkout.
-                    </p>
-                  </div>
-                  <button className="flex min-h-40 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#B7C6B9] bg-white text-[#1F5D3B] transition-colors hover:bg-[#E8F3EC]">
-                    <Plus className="mb-2 h-5 w-5" />
-                    <span className="text-sm font-semibold">Add New Address</span>
-                  </button>
+                  ))}
                 </div>
+
+                <form onSubmit={handleAddAddress} className="mt-5 grid grid-cols-1 gap-3 rounded-2xl bg-[#FEF2E3] p-4 sm:grid-cols-2">
+                  <input value={addressForm.recipient_name} onChange={(event) => setAddressForm((prev) => ({ ...prev, recipient_name: event.target.value }))} placeholder="Recipient name" className="rounded-xl bg-white px-4 py-3 text-sm outline-none" />
+                  <input value={addressForm.phone} onChange={(event) => setAddressForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="Phone" className="rounded-xl bg-white px-4 py-3 text-sm outline-none" />
+                  <textarea value={addressForm.address} onChange={(event) => setAddressForm((prev) => ({ ...prev, address: event.target.value }))} placeholder="Full address" rows={3} className="rounded-xl bg-white px-4 py-3 text-sm outline-none sm:col-span-2" required />
+                  <input value={addressForm.city} onChange={(event) => setAddressForm((prev) => ({ ...prev, city: event.target.value }))} placeholder="City" className="rounded-xl bg-white px-4 py-3 text-sm outline-none" />
+                  <input value={addressForm.pin_code} onChange={(event) => setAddressForm((prev) => ({ ...prev, pin_code: event.target.value }))} placeholder="PIN Code" className="rounded-xl bg-white px-4 py-3 text-sm outline-none" />
+                  <label className="flex items-center gap-2 text-sm text-[#56615B]">
+                    <input checked={addressForm.is_default} onChange={(event) => setAddressForm((prev) => ({ ...prev, is_default: event.target.checked }))} type="checkbox" />
+                    Make default
+                  </label>
+                  <button disabled={saving} type="submit" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1F5D3B] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
+                    <Plus className="h-4 w-4" />
+                    Add Address
+                  </button>
+                </form>
               </AccountPanel>
             )}
 
             {activeTab === "consultations" && (
-              <AccountPanel title="Consultations" description="Your wellness consultation history will appear here.">
-                <div className="rounded-2xl bg-[#FEF2E3] p-8 text-center">
-                  <Calendar className="mx-auto mb-3 h-8 w-8 text-[#1F5D3B]" />
-                  <p className="font-medium text-[#201B12]">No consultations booked yet</p>
-                  <p className="mt-1 text-sm text-[#56615B]">
-                    Book a consultation when you are ready for guided Ayurvedic support.
-                  </p>
+              <AccountPanel title="Consultations" description="Your booked wellness consultations.">
+                <div className="space-y-3">
+                  {consultations.map((item) => (
+                    <div key={item.id} className="rounded-2xl bg-[#FEF2E3] p-4">
+                      <p className="font-medium text-[#201B12]">{item.health_concern ?? "General Wellness"}</p>
+                      <p className="mt-1 text-sm text-[#56615B]">
+                        {item.preferred_date ?? "-"} | {item.preferred_time ?? "-"} | {item.status}
+                      </p>
+                    </div>
+                  ))}
+                  {consultations.length === 0 && <EmptyState text="No consultations booked yet." />}
                 </div>
               </AccountPanel>
             )}
@@ -341,5 +439,13 @@ function AccountPanel({
       </div>
       {children}
     </motion.div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl bg-[#FEF2E3] p-8 text-center text-sm text-[#56615B]">
+      {text}
+    </div>
   );
 }

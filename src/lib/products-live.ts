@@ -38,6 +38,9 @@ type CategoryRow = {
   Quantity: string | null;
   Price: string | null;
   images: string[] | null;
+  status?: string | null;
+  stock_quantity?: number | null;
+  featured?: boolean | null;
 };
 
 type ConcernRow = {
@@ -154,7 +157,6 @@ const productImageByName: Record<string, string> = {
   "pr gold capsule": "/productimages/Arshar7_capsule.jpeg",
   "prg capsule": "/productimages/Arshar7_capsule.jpeg",
   "punarnava ark": "/productimages/ARQ_Purnarnava.jpeg",
-  "rosemary oil": "/productimages/Methi_oil.jpeg",
   "salam pak": "/productimages/Badam_pak.jpeg",
   "sandal oil": "/productimages/Chameli_oil.jpeg",
   "saunf ark": "/productimages/saunf_arq.jpeg",
@@ -195,6 +197,7 @@ const comingSoonImage = "/images/coming-soon.svg";
 
 const suppressedFallbackImageNames = new Set([
   "amla juice",
+  "rosemary oil",
   "shankh pushpi",
 ]);
 
@@ -296,10 +299,18 @@ function concernToSlug(value: string): string {
 
   const mapping: Array<{ match: RegExp; slug: string }> = [
     { match: /immun/, slug: "immunity-booster" },
+    { match: /cough|cold/, slug: "cough-cold-relief" },
     { match: /digest|gut|constipat/, slug: "digestive-care" },
     { match: /diabet|sugar|glucose/, slug: "diabetic-care" },
+    { match: /elder/, slug: "elderly-care" },
+    { match: /hair/, slug: "hair-care" },
+    { match: /kid|child/, slug: "kid-wellness" },
     { match: /heart|cardiac|cholesterol|bp|blood pressure/, slug: "cardiac-care" },
     { match: /pain|joint|muscle|inflamm/, slug: "pain-relief" },
+    { match: /skin|face|beauty/, slug: "skin-care" },
+    { match: /stress|sleep|mind/, slug: "stress-relief" },
+    { match: /weight|slim|obesity/, slug: "weight-management" },
+    { match: /women|female|period|pcos/, slug: "womens-health" },
     { match: /men|male|vitality|testosterone/, slug: "mens-health" },
   ];
 
@@ -586,7 +597,7 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     queryWithRetry(async () =>
       await supabase
         .from("products_by_category")
-        .select('"Product Name",Category,Quantity,Price,images')
+        .select('"Product Name",Category,Quantity,Price,images,status,stock_quantity,featured')
     ),
     queryWithRetry(async () =>
       await supabase
@@ -649,6 +660,7 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     if (!name) continue;
 
     const key = normalizeName(name);
+    if (row.status && row.status !== "active") continue;
     const category = (row.Category ?? "General Wellness").trim() || "General Wellness";
     const categorySlug = categoryToSlug(category);
     const quantity = (row.Quantity ?? "").trim();
@@ -656,47 +668,23 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     const concerns = Array.from(concernsByName.get(key) ?? []);
     const images = parseImages(row.images);
     const mergedImages = images.length > 0 ? images : imagesByName.get(key) ?? [];
-
-    productsByName.set(
-      key,
-      buildProduct(
-        name,
-        category,
-        categorySlug,
-        quantity,
-        price,
-        concerns,
-        mergedImages,
-        true
-      )
+    const product = buildProduct(
+      name,
+      category,
+      categorySlug,
+      quantity,
+      price,
+      concerns,
+      mergedImages,
+      true
     );
-  }
 
-  for (const row of concernData) {
-    const name = (row["Product Name"] ?? "").trim();
-    if (!name) continue;
-
-    const key = normalizeName(name);
-    if (productsByName.has(key)) continue;
-
-    const concerns = Array.from(concernsByName.get(key) ?? []);
-    const price = row.Price ?? 0;
-    const quantity = (row.Quantity ?? "").trim();
-    const images = parseImages(row.images);
-
-    productsByName.set(
-      key,
-      buildProduct(
-        name,
-        "General Wellness",
-        "general",
-        quantity,
-        price,
-        concerns,
-        images,
-        true
-      )
-    );
+    productsByName.set(key, {
+      ...product,
+      featured: Boolean(row.featured) || product.featured,
+      inStock: row.stock_quantity == null ? true : row.stock_quantity > 0,
+      badge: row.featured ? "Featured" : product.badge,
+    });
   }
 
   const mergedProducts = Array.from(productsByName.values()).sort((a, b) =>
@@ -764,8 +752,13 @@ export function subscribeProductsRealtime(onChange: () => void): () => void {
     return () => {};
   }
 
+  const suffix =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
   const byCategory = supabase
-    .channel("products-by-category-live")
+    .channel(`products-by-category-live-${suffix}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "products_by_category" },
@@ -774,7 +767,7 @@ export function subscribeProductsRealtime(onChange: () => void): () => void {
     .subscribe();
 
   const byConcern = supabase
-    .channel("products-by-concern-live")
+    .channel(`products-by-concern-live-${suffix}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "products_by_concern" },

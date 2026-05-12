@@ -3,9 +3,37 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { concerns } from "@/lib/concerns";
-import { Shield, Flame, Activity, Heart, Zap, Dumbbell } from "lucide-react";
+import {
+  Activity,
+  Baby,
+  Brain,
+  Dumbbell,
+  Flame,
+  Flower2,
+  Heart,
+  Scale,
+  Shield,
+  Sparkles,
+  Users,
+  Wind,
+  Zap,
+} from "lucide-react";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Shield, Flame, Activity, Heart, Zap, Dumbbell };
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Activity,
+  Baby,
+  Brain,
+  Dumbbell,
+  Flame,
+  Flower2,
+  Heart,
+  Scale,
+  Shield,
+  Sparkles,
+  Users,
+  Wind,
+  Zap,
+};
 
 export default function ConcernsIndexPage() {
   return (

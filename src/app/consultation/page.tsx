@@ -4,7 +4,6 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calendar, Clock, CheckCircle2, Stethoscope, Leaf } from "lucide-react";
-import { createConsultationRequest } from "@/lib/admin-data";
 
 export default function ConsultationPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -19,7 +18,10 @@ export default function ConsultationPage() {
     const form = new FormData(event.currentTarget);
 
     try {
-      await createConsultationRequest({
+      const response = await fetch("/api/consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
         full_name: String(form.get("full_name") ?? ""),
         age: Number(form.get("age") ?? 0),
         gender: String(form.get("gender") ?? ""),
@@ -27,7 +29,12 @@ export default function ConsultationPage() {
         condition_details: String(form.get("condition_details") ?? ""),
         preferred_date: String(form.get("preferred_date") ?? ""),
         preferred_time: String(form.get("preferred_time") ?? ""),
+        }),
       });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error ?? "Could not book consultation.");
+      }
       setSubmitted(true);
     } catch (error) {
       setErrorMessage(
