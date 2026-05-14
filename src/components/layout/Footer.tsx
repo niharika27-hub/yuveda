@@ -40,13 +40,13 @@ export function Footer() {
                 Get Ayurvedic tips, exclusive offers, and new product updates.
               </p>
             </div>
-            <div className="flex w-full md:w-auto gap-2">
+            <div className="flex w-full flex-col sm:flex-row md:w-auto gap-2">
               <input
                 type="email"
                 placeholder="Enter your email"
                 className="flex-1 md:w-72 px-5 py-3 rounded-full bg-white/10 text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A961]/50 backdrop-blur-sm"
               />
-              <button className="px-6 py-3 rounded-full bg-[#C9A961] text-[#251A00] font-medium text-sm hover:bg-[#E4C278] transition-colors whitespace-nowrap">
+              <button className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#C9A961] text-[#251A00] font-medium text-sm hover:bg-[#E4C278] transition-colors whitespace-nowrap">
                 Subscribe
               </button>
             </div>
@@ -56,9 +56,9 @@ export function Footer() {
 
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+        <div className="flex flex-wrap gap-8 sm:gap-10">
           {/* Brand */}
-          <div className="lg:col-span-2">
+          <div className="w-full lg:basis-[40%]">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-full bg-[#C9A961] flex items-center justify-center">
                 <span className="text-[#251A00] font-serif text-lg font-bold">Y</span>
@@ -86,11 +86,31 @@ export function Footer() {
                 <span>Garah City Colony, Opp. Radha Swami Satsang Ghar, Nawanshahar Road, Phillaur 144410, Punjab</span>
               </div>
             </div>
+            <div className="mt-5 flex items-center gap-3">
+              <a
+                href="https://www.facebook.com/share/17uKq1FFqo/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Yuveda on Facebook"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 transition-all hover:-translate-y-0.5 hover:bg-[#C9A961] hover:text-[#251A00]"
+              >
+                <i className="fa-brands fa-facebook-f" aria-hidden="true" />
+              </a>
+              <a
+                href="https://www.instagram.com/yuveda_aayurrattan_herbals?igsh=bzM3ZHgwYnBqcjhl"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Yuveda on Instagram"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 transition-all hover:-translate-y-0.5 hover:bg-[#C9A961] hover:text-[#251A00]"
+              >
+                <i className="fa-brands fa-instagram" aria-hidden="true" />
+              </a>
+            </div>
           </div>
 
           {/* Links */}
           {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
+            <div key={title} className="w-[48%] min-w-[150px] sm:w-auto sm:flex-1">
               <h4 className="font-serif text-lg text-white mb-4">{title}</h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (

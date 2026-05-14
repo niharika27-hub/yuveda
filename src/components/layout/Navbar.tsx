@@ -68,6 +68,18 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
+    if (!searchOpen) return;
+
+    const handleScrollClose = () => {
+      setSearchOpen(false);
+      setSearchQuery("");
+    };
+
+    window.addEventListener("scroll", handleScrollClose, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollClose);
+  }, [searchOpen]);
+
+  useEffect(() => {
     let mounted = true;
 
     const syncAdmin = async () => {
@@ -202,7 +214,7 @@ export function Navbar() {
                       initial={{ opacity: 0, scale: 0.95, y: 8 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                      className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[72vh] overflow-hidden rounded-2xl border border-white/55 bg-[rgba(248,253,249,0.9)] shadow-ambient-lg backdrop-blur-xl"
+                      className="fixed left-4 right-4 top-20 z-50 mt-2 w-auto max-h-[72vh] overflow-hidden rounded-2xl border border-white/55 bg-[rgba(248,253,249,0.9)] shadow-ambient-lg backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-[min(20rem,calc(100vw-1.5rem))]"
                     >
                       <div className="p-3">
                         <input

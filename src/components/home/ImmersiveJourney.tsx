@@ -347,9 +347,30 @@ export function ImmersiveJourney() {
     };
   }, []);
 
-  const featured = products.filter((product) => product.featured).slice(0, 4);
-  const highlightedProducts =
-    featured.length > 0 ? featured : products.slice(0, 4);
+  const normalizeName = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const preferredTokens = [
+    "yakritrattan",
+    "yakrirratan",
+    "immunovid",
+    "immunoviddrops",
+    "kutajcare",
+    "kutajcure",
+  ];
+  const preferredProducts = products.filter((product) => {
+    const normalized = normalizeName(product.name);
+    return preferredTokens.some((token) => normalized.includes(token));
+  });
+  const featured = products.filter((product) => product.featured);
+  const fallback = products;
+  const highlightedProducts = Array.from(
+    new Map(
+      [...preferredProducts, ...featured, ...fallback].map((product) => [
+        product.id,
+        product,
+      ])
+    ).values()
+  ).slice(0, 4);
 
   return (
     <div ref={pageRef} className="relative overflow-x-clip">
@@ -372,16 +393,16 @@ export function ImmersiveJourney() {
         </div>
 
         <div className="js-hero-content relative mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-20 pt-24 sm:px-6 lg:px-8">
-          <div className="js-glass-tilt glass-hover-media hero-glass-card max-w-3xl rounded-[30px] border border-white/65 bg-white/16 p-5 shadow-[0_12px_30px_rgba(20,43,31,0.14)] backdrop-blur-[2px] backdrop-saturate-150 transition-all duration-500 ease-out hover:border-white/85 hover:bg-white/22 sm:p-7 lg:p-10">
+          <div className="js-glass-tilt glass-hover-media hero-glass-card max-w-3xl rounded-[30px] border border-white/65 bg-white/16 p-5 shadow-[0_12px_30px_rgba(20,43,31,0.14)] backdrop-blur-[14px] backdrop-saturate-150 transition-all duration-500 ease-out hover:border-white/85 hover:bg-white/22 sm:p-7 lg:p-10">
             <p className="text-sm font-semibold uppercase tracking-[0.26em] text-[#123122]">
               Ancient Wisdom. Modern Wellness.
             </p>
-            <h1 className="mt-4 text-[clamp(3rem,8vw,5.55rem)] font-semibold leading-[0.98] tracking-tight text-[#132d21]">
+            <h1 className="mt-4 text-[clamp(3rem,8vw,5.55rem)] font-extrabold leading-[0.98] tracking-tight text-[#132d21]">
               Wellness that blooms
               <br />
               with every scroll.
             </h1>
-            <p className="mt-5 max-w-2xl text-[clamp(1.05rem,2.2vw,1.3rem)] leading-relaxed text-[#18372a]">
+            <p className="mt-5 max-w-2xl text-[clamp(1.05rem,2.2vw,1.3rem)] font-semibold leading-relaxed text-[#0f2a1f]">
               Yuveda blends herbal intelligence and mindful design into a calm,
               cinematic experience grounded in Ayurveda.
             </p>

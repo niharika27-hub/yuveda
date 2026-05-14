@@ -58,7 +58,7 @@ export default function ConsultationPage() {
   }
 
   return (
-    <div className="pt-24 pb-16">
+    <div className="pt-24 pb-24 sm:pb-16">
       {/* Hero */}
       <div className="relative h-64 sm:h-72 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#004526] to-[#1F5D3B]" />
@@ -79,7 +79,7 @@ export default function ConsultationPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
           {/* Form */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-ambient p-8">
+            <div className="bg-white rounded-2xl shadow-ambient p-6 sm:p-8">
               <h2 className="font-serif text-2xl text-[#201B12] mb-6">Get Personalized Ayurvedic Plan</h2>
               <form onSubmit={submitConsultation} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

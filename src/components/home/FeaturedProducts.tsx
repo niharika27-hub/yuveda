@@ -93,8 +93,29 @@ function ProductCard({ product }: { product: Product }) {
 
 export function FeaturedProducts() {
   const { products } = useRealtimeProducts();
-  const featured = products.filter((product) => product.featured).slice(0, 8);
-  const showcaseProducts = featured.length > 0 ? featured : products.slice(0, 8);
+  const normalizeName = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const preferredTokens = [
+    "yakritrattan",
+    "yakrirratan",
+    "immunovid",
+    "immunoviddrops",
+    "kutajcare",
+    "kutajcure",
+  ];
+  const preferredProducts = products.filter((product) => {
+    const normalized = normalizeName(product.name);
+    return preferredTokens.some((token) => normalized.includes(token));
+  });
+  const featured = products.filter((product) => product.featured);
+  const showcaseProducts = Array.from(
+    new Map(
+      [...preferredProducts, ...featured, ...products].map((product) => [
+        product.id,
+        product,
+      ])
+    ).values()
+  ).slice(0, 8);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (

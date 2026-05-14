@@ -28,7 +28,7 @@ function ProductCard({ product }: { product: Product }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3 }}
-      className="group"
+      className="group mb-6"
     >
       <Link
         href={`/product/${product.id}`}
@@ -351,9 +351,11 @@ export default function ShopPage() {
           <h1 className="font-serif text-4xl sm:text-5xl text-[#201B12]">
             All Products
           </h1>
-          <p className="text-[#56615B] mt-2">
-            {filteredProducts.length} products available
-          </p>
+          <div className="mt-2">
+            <span className="relative z-10 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F5D3B] text-white text-sm font-medium shadow-ambient-sm border-2 border-white/80 ring-2 ring-[#C9A961]/40">
+              {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+            </span>
+          </div>
           {loading && (
             <p className="text-sm text-[#56615B] mt-1">Loading live products...</p>
           )}

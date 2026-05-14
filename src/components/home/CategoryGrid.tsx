@@ -59,7 +59,7 @@ export function CategoryGrid() {
               >
                 <Link
                   href={`/category/${cat.slug}`}
-                  className="group block relative bg-white rounded-2xl overflow-hidden shadow-ambient hover:shadow-ambient-lg transition-all duration-500 hover:-translate-y-1"
+                  className="group block relative bg-[#2D7A4E] rounded-2xl overflow-hidden shadow-ambient hover:shadow-ambient-lg hover:bg-[#1F5D3B] transition-all duration-500 hover:-translate-y-1"
                 >
                   <div className="relative h-40 sm:h-48 overflow-hidden">
                     <img
@@ -83,6 +83,11 @@ export function CategoryGrid() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                  <div className="bg-[#2D7A4E] p-4">
+                    <p className="text-white text-sm leading-relaxed">
+                      {cat.description}
+                    </p>
                   </div>
                 </Link>
               </motion.div>
