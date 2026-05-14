@@ -54,7 +54,7 @@ update public.products_by_category set images = ARRAY['/productimages/Clove_oil.
 update public.products_by_category set images = ARRAY['/productimages/Lin_seed_oil.jpeg'] where "Product Name" = 'Walnut Oil';
 update public.products_by_category set images = ARRAY['/productimages/malkangni_oil.jpeg'] where "Product Name" = 'Malkangni Oil';
 update public.products_by_category set images = ARRAY['/productimages/kalonji_oil.jpeg'] where "Product Name" = 'Kalounji Oil';
-update public.products_by_category set images = ARRAY['/productimages/Methi_oil.jpeg'] where "Product Name" = 'Rosemary Oil';
+update public.products_by_category set images = ARRAY['/images/coming-soon.svg'] where "Product Name" = 'Rosemary Oil';
 update public.products_by_category set images = ARRAY['/productimages/indica_seed_oil.jpeg'] where "Product Name" = 'Neem Oil';
 update public.products_by_category set images = ARRAY['/productimages/Castor_oil.jpeg'] where "Product Name" = 'Castor Oil';
 update public.products_by_category set images = ARRAY['/productimages/lowki_oil.jpeg'] where "Product Name" = 'Lawki Oil';

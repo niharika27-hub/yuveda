@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Leaf } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { isAdminEmail } from "@/lib/admin";
+
+async function isAdminSession() {
+  const response = await fetch("/api/admin/session", { cache: "no-store" });
+  const data = (await response.json()) as { isAdmin?: boolean };
+  return Boolean(data.isAdmin);
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +32,7 @@ export default function LoginPage() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace(isAdminEmail(session.user.email) ? "/admin" : "/profile");
+        router.replace((await isAdminSession()) ? "/admin" : "/profile");
       }
     };
 
@@ -64,7 +69,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(isAdminEmail(email) ? "/admin" : "/profile");
+      router.push((await isAdminSession()) ? "/admin" : "/profile");
       router.refresh();
       setLoading(false);
       return;
@@ -105,7 +110,7 @@ export default function LoginPage() {
       });
     }
 
-    router.push(isAdminEmail(email) ? "/admin" : "/profile");
+    router.push((await isAdminSession()) ? "/admin" : "/profile");
     router.refresh();
     setLoading(false);
   };

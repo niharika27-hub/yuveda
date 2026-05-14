@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 export const hasSupabasePublicEnv = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -25,7 +25,7 @@ if (!hasSupabasePublicEnv) {
   }
 }
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+export const supabase = createBrowserClient(supabaseUrl, supabasePublishableKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,

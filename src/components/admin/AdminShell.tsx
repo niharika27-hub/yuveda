@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -9,10 +10,9 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
-  ShieldCheck,
   ShoppingBag,
+  Users,
 } from "lucide-react";
-import { isCurrentUserAdmin } from "@/lib/admin";
 import { supabase } from "@/lib/supabase/client";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -24,7 +24,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const check = async () => {
-      const ok = await isCurrentUserAdmin();
+      const response = await fetch("/api/admin/session", { cache: "no-store" });
+      const session = (await response.json()) as { isAdmin?: boolean };
+      const ok = Boolean(session.isAdmin);
       if (!mounted) {
         return;
       }
@@ -65,8 +67,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[#f7f4ec] text-[#20342a]">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[#ded7c9] bg-[#123527] text-white lg:block">
         <div className="flex h-16 items-center gap-2 border-b border-white/10 px-5">
-          <ShieldCheck className="h-5 w-5 text-[#d8bc6a]" />
-          <span className="font-serif text-xl">Yuveda Admin</span>
+          <Image
+            src="/journey/yuveda-logo.png"
+            alt="Yuveda"
+            width={150}
+            height={55}
+            className="h-9 w-auto rounded bg-white/92 object-contain px-2 py-1"
+          />
         </div>
         <nav className="space-y-1 p-3">
           <Link href="/admin" className="flex items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm text-[#123527]">
@@ -88,6 +95,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <a href="/admin#payments" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
             <CreditCard className="h-4 w-4" />
             Payments
+          </a>
+          <a href="/admin#customers" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/76 hover:bg-white/10">
+            <Users className="h-4 w-4" />
+            Customers
           </a>
         </nav>
       </aside>

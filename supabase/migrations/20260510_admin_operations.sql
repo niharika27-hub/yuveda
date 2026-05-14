@@ -6,7 +6,7 @@ create table if not exists public.app_admins (
 );
 
 insert into public.app_admins (email)
-values ('niharika1287.becse24@chitkara.edu.in')
+values ('yuvedalife2008@gmail.com')
 on conflict (email) do nothing;
 
 create or replace function public.is_app_admin()

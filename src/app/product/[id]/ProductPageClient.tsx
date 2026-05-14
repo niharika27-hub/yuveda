@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart, Heart, Minus, Plus, ShieldCheck, Truck, Leaf, ChevronLeft, ChevronRight } from "lucide-react";
@@ -19,6 +19,7 @@ import { useWishlistStore } from "@/store/useWishlistStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notFound } from "next/navigation";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
+import { useProductReviews } from "@/hooks/useProductReviews";
 
 function RelatedCard({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -60,8 +61,19 @@ export function ProductPageClient({ id }: { id: string }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<PriceVariant | undefined>(undefined);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewEmail, setReviewEmail] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const { addItem: addWish, removeItem: removeWish, isInWishlist } = useWishlistStore();
+  const {
+    reviews: liveReviews,
+    loading: reviewsLoading,
+    refresh: refreshReviews,
+  } = useProductReviews(product?.id, 10);
 
   if (!loading && !product) {
     notFound();
@@ -80,10 +92,51 @@ export function ProductPageClient({ id }: { id: string }) {
   const activeVariant = selectedVariant ?? getDefaultPriceVariant(product);
   const activePrice = getProductPrice(product, activeVariant);
   const purchasable = isProductPurchasable(product);
+  const liveAverage =
+    liveReviews.length > 0
+      ? liveReviews.reduce((sum, review) => sum + review.rating, 0) / liveReviews.length
+      : product.rating;
+  const displayedRating = Number(liveAverage.toFixed(1));
+  const displayedReviewCount = liveReviews.length > 0 ? liveReviews.length : product.reviews;
   const discount =
     product.originalPrice > activePrice && product.originalPrice > 0
       ? Math.round(((product.originalPrice - activePrice) / product.originalPrice) * 100)
       : 0;
+
+  const submitReview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmittingReview(true);
+    setReviewMessage("");
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: product.id,
+          product_name: product.name,
+          reviewer_name: reviewName,
+          reviewer_email: reviewEmail,
+          rating: reviewRating,
+          comment: reviewComment,
+        }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error ?? "Could not submit review.");
+      }
+      setReviewName("");
+      setReviewEmail("");
+      setReviewRating(5);
+      setReviewComment("");
+      setReviewMessage("Review posted. Thank you.");
+      await refreshReviews();
+    } catch (err) {
+      setReviewMessage(err instanceof Error ? err.message : "Could not submit review.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   return (
     <div className="pt-24 pb-16">
@@ -103,14 +156,14 @@ export function ProductPageClient({ id }: { id: string }) {
         </div>
 
         {/* Product Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-8 lg:gap-10 mb-20">
           {/* Images */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="relative rounded-2xl overflow-hidden bg-[#F2E6D7] aspect-square mb-4 group">
+            <div className="relative rounded-2xl overflow-hidden border border-[#e0d4c2] bg-[#F2E6D7] aspect-square mb-4 group shadow-ambient-sm">
               <img
                 src={product.images[selectedImage]}
                 alt={product.name}
@@ -150,6 +203,7 @@ export function ProductPageClient({ id }: { id: string }) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="rounded-2xl border border-[#e0d4c2] bg-white/96 p-5 shadow-ambient-sm sm:p-7"
           >
             <span className="text-sm text-[#C9A961] font-medium">{product.category}</span>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#201B12] mt-1 mb-4">{product.name}</h1>
@@ -157,11 +211,11 @@ export function ProductPageClient({ id }: { id: string }) {
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, j) => (
-                  <Star key={j} className={`w-4 h-4 ${j < Math.floor(product.rating) ? "fill-[#C9A961] text-[#C9A961]" : "text-[#EDE1D2]"}`} />
+                  <Star key={j} className={`w-4 h-4 ${j < Math.floor(displayedRating) ? "fill-[#C9A961] text-[#C9A961]" : "text-[#EDE1D2]"}`} />
                 ))}
               </div>
-              <span className="text-sm text-[#201B12] font-medium">{product.rating}</span>
-              <span className="text-sm text-[#56615B]">({product.reviews} reviews)</span>
+              <span className="text-sm text-[#201B12] font-medium">{displayedRating}</span>
+              <span className="text-sm text-[#56615B]">({displayedReviewCount} reviews)</span>
             </div>
 
             <div className="flex items-baseline gap-3 mb-6">
@@ -272,7 +326,7 @@ export function ProductPageClient({ id }: { id: string }) {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="description" className="mb-20">
+        <Tabs defaultValue="description" className="mb-20 rounded-2xl border border-[#e0d4c2] bg-white/96 p-4 shadow-ambient-sm sm:p-6">
           <TabsList className="w-full justify-start bg-[#FEF2E3] rounded-2xl p-1.5 h-auto flex-wrap">
             {["Description", "Ingredients", "Benefits", "How to Use", "Reviews"].map((tab) => (
               <TabsTrigger key={tab} value={tab.toLowerCase().replace(/ /g, "-")} className="rounded-xl py-2.5 px-5 text-sm data-[state=active]:bg-white data-[state=active]:text-[#1F5D3B] data-[state=active]:shadow-ambient-sm">
@@ -281,13 +335,15 @@ export function ProductPageClient({ id }: { id: string }) {
             ))}
           </TabsList>
 
-          <div className="mt-8 max-w-3xl">
+          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
             <TabsContent value="description">
-              <p className="text-[#201B12] leading-relaxed">{product.description}</p>
+              <div className="rounded-2xl bg-[#FFF8F3] p-5">
+                <p className="text-[#201B12] leading-relaxed">{product.description}</p>
+              </div>
             </TabsContent>
 
             <TabsContent value="ingredients">
-              <ul className="space-y-2">
+              <ul className="grid gap-3 rounded-2xl bg-[#FFF8F3] p-5 sm:grid-cols-2">
                 {product.ingredients.map((ing) => (
                   <li key={ing} className="flex items-start gap-2 text-[#201B12]">
                     <Leaf className="w-4 h-4 text-[#1F5D3B] mt-0.5 flex-shrink-0" />
@@ -298,7 +354,7 @@ export function ProductPageClient({ id }: { id: string }) {
             </TabsContent>
 
             <TabsContent value="benefits">
-              <ul className="space-y-2">
+              <ul className="grid gap-3 rounded-2xl bg-[#FFF8F3] p-5 sm:grid-cols-2">
                 {product.benefits.map((b) => (
                   <li key={b} className="flex items-start gap-2 text-[#201B12]">
                     <ShieldCheck className="w-4 h-4 text-[#C9A961] mt-0.5 flex-shrink-0" />
@@ -309,22 +365,64 @@ export function ProductPageClient({ id }: { id: string }) {
             </TabsContent>
 
             <TabsContent value="how-to-use">
-              <p className="text-[#201B12] leading-relaxed">{product.usage}</p>
+              <div className="rounded-2xl bg-[#FFF8F3] p-5">
+                <p className="text-[#201B12] leading-relaxed">{product.usage}</p>
+              </div>
             </TabsContent>
 
             <TabsContent value="reviews">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="text-center">
-                  <p className="text-4xl font-serif font-bold text-[#1F5D3B]">{product.rating}</p>
-                  <div className="flex items-center gap-0.5 mt-1">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} className={`w-4 h-4 ${j < Math.floor(product.rating) ? "fill-[#C9A961] text-[#C9A961]" : "text-[#EDE1D2]"}`} />
-                    ))}
+              <div className="grid gap-5 lg:grid-cols-2">
+                <div className="rounded-2xl bg-[#FFF8F3] p-5">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="text-center">
+                      <p className="text-4xl font-serif font-bold text-[#1F5D3B]">{displayedRating}</p>
+                      <div className="flex items-center gap-0.5 mt-1">
+                        {[...Array(5)].map((_, j) => (
+                          <Star key={j} className={`w-4 h-4 ${j < Math.floor(displayedRating) ? "fill-[#C9A961] text-[#C9A961]" : "text-[#EDE1D2]"}`} />
+                        ))}
+                      </div>
+                      <p className="text-sm text-[#56615B] mt-1">{displayedReviewCount} reviews</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-[#56615B] mt-1">{product.reviews} reviews</p>
+                  <div className="space-y-3">
+                    {reviewsLoading && <p className="text-sm text-[#56615B]">Loading reviews...</p>}
+                    {liveReviews.map((review) => (
+                      <article key={review.id} className="rounded-xl bg-white p-4">
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <p className="font-medium text-[#201B12]">{review.reviewer_name}</p>
+                          <div className="flex text-[#C9A961]">
+                            {[0, 1, 2, 3, 4].map((star) => (
+                              <Star key={star} className={`h-3.5 w-3.5 ${star < review.rating ? "fill-current" : "text-[#EDE1D2]"}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm leading-relaxed text-[#56615B]">{review.comment}</p>
+                      </article>
+                    ))}
+                    {!reviewsLoading && liveReviews.length === 0 && (
+                      <p className="text-sm text-[#56615B]">No customer reviews yet.</p>
+                    )}
+                  </div>
                 </div>
+
+                <form onSubmit={submitReview} className="rounded-2xl bg-[#FFF8F3] p-5">
+                  <h3 className="font-serif text-xl text-[#201B12]">Write a Review</h3>
+                  <div className="mt-4 grid gap-3">
+                    <input value={reviewName} onChange={(event) => setReviewName(event.target.value)} placeholder="Your name" className="rounded-xl bg-white px-4 py-3 text-sm outline-none ring-1 ring-[#EDE1D2]" required />
+                    <input value={reviewEmail} onChange={(event) => setReviewEmail(event.target.value)} placeholder="Email optional" type="email" className="rounded-xl bg-white px-4 py-3 text-sm outline-none ring-1 ring-[#EDE1D2]" />
+                    <select value={reviewRating} onChange={(event) => setReviewRating(Number(event.target.value))} className="rounded-xl bg-white px-4 py-3 text-sm outline-none ring-1 ring-[#EDE1D2]">
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <option key={rating} value={rating}>{rating} stars</option>
+                      ))}
+                    </select>
+                    <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Share your experience" rows={5} className="rounded-xl bg-white px-4 py-3 text-sm outline-none ring-1 ring-[#EDE1D2]" required />
+                    {reviewMessage && <p className="text-sm text-[#56615B]">{reviewMessage}</p>}
+                    <button disabled={submittingReview} className="rounded-full bg-[#1F5D3B] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
+                      {submittingReview ? "Posting..." : "Post Review"}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <p className="text-[#56615B]">Customer reviews will appear here.</p>
             </TabsContent>
           </div>
         </Tabs>

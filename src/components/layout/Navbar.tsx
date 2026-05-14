@@ -19,7 +19,6 @@ import { useWishlistStore } from "@/store/useWishlistStore";
 import { getProductPriceLabel, searchProductsInList } from "@/lib/products-live";
 import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 import { supabase } from "@/lib/supabase/client";
-import { isAdminEmail } from "@/lib/admin";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -83,11 +82,10 @@ export function Navbar() {
     let mounted = true;
 
     const syncAdmin = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (mounted) {
-        setShowAdminLink(isAdminEmail(user?.email));
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        const session = (await response.json()) as { isAdmin?: boolean };
+        setShowAdminLink(Boolean(session.isAdmin));
       }
     };
 
@@ -95,8 +93,8 @@ export function Navbar() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setShowAdminLink(isAdminEmail(session?.user.email));
+    } = supabase.auth.onAuthStateChange(() => {
+      void syncAdmin();
     });
 
     return () => {
